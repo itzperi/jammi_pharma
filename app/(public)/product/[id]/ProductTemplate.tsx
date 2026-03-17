@@ -23,6 +23,7 @@ interface Product {
     features?: Array<{ title: string; desc: string; icon: string }>;
     botanicals?: Array<{ name: string; desc: string; image: string }>;
     ritual?: Array<{ title: string; desc: string }>;
+    stockStatus?: string;
 }
 
 export default function ProductTemplate({ productId }: { productId: string }) {
@@ -61,7 +62,8 @@ export default function ProductTemplate({ productId }: { productId: string }) {
                     category: dbProduct.category || 'Wellness',
                     features: dbProduct.features || [],
                     botanicals: dbProduct.botanicals || [],
-                    ritual: dbProduct.ritual || []
+                    ritual: dbProduct.ritual || [],
+                    stockStatus: dbProduct.stockStatus || 'In Stock'
                 });
             } else if (!dbProduct || (dbProduct.deleted && dbProduct.status)) {
                 // If soft deleted from DB, don't fallback to mock
@@ -245,14 +247,31 @@ export default function ProductTemplate({ productId }: { productId: string }) {
                             <div className="flex justify-between items-end mb-6">
                                 <div>
                                     <p className="text-sm text-slate-500 font-bold mb-1">Price</p>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹{product.price}</span>
-                                        <span className="text-xs sm:text-sm font-medium text-slate-500">/ Unit</span>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹</span>
+                                        <LiveEditable collection="products" docId={product.id} field="price" inputType="number" className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                                            {product.price}
+                                        </LiveEditable>
+                                        <span className="text-xs sm:text-sm font-medium text-slate-500 ml-1">/ Unit</span>
                                     </div>
                                 </div>
                                 <div className="text-right hidden sm:block">
-                                    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs sm:text-sm font-bold bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-lg">
-                                        <span className="material-symbols-outlined text-[12px] sm:text-[14px]">bolt</span> In Stock
+                                    <span className={`inline-flex items-center gap-1 text-xs sm:text-sm font-bold px-3 py-1 rounded-lg ${product.stockStatus === 'Out of Stock' ? 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30' : 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30'}`}>
+                                        <span className="material-symbols-outlined text-[12px] sm:text-[14px]">
+                                            {product.stockStatus === 'Out of Stock' ? 'warning' : 'bolt'}
+                                        </span> 
+                                        <LiveEditable 
+                                            collection="products" 
+                                            docId={product.id} 
+                                            field="stockStatus" 
+                                            inputType="select" 
+                                            options={[
+                                                { label: 'In Stock', value: 'In Stock' },
+                                                { label: 'Out of Stock', value: 'Out of Stock' }
+                                            ]}
+                                        >
+                                            {product.stockStatus || 'In Stock'}
+                                        </LiveEditable>
                                     </span>
                                 </div>
                             </div>
@@ -288,9 +307,15 @@ export default function ProductTemplate({ productId }: { productId: string }) {
                     <div className="absolute inset-0 bg-forest/80 backdrop-blur-sm"></div>
                     <div className="relative z-10 p-8 sm:p-12 md:p-20 text-center max-w-4xl mx-auto flex flex-col items-center">
                         <span className="material-symbols-outlined text-primary text-4xl sm:text-5xl mb-4 sm:mb-6 opacity-80">auto_stories</span>
-                        <h3 className="text-2xl sm:text-3xl md:text-5xl font-display font-medium text-white mb-4 sm:mb-6 leading-tight">A Formulation Born of Heritage</h3>
+                        <h3 className="text-2xl sm:text-3xl md:text-5xl font-display font-medium text-white mb-4 sm:mb-6 leading-tight">
+                            <LiveEditable collection="page_content" docId="product_template" field="legacy_banner_title" className="block w-full text-center text-white">
+                                A Formulation Born of Heritage
+                            </LiveEditable>
+                        </h3>
                         <p className="text-base sm:text-lg text-slate-300 font-body leading-relaxed md:px-12">
-                            Every Jammi product is deeply rooted in ancient Ayurvedic texts. We preserve the integrity of these powerful botanicals to guarantee true, holistic wellness for the modern era.
+                            <LiveEditable collection="page_content" docId="product_template" field="legacy_banner_desc" multiline className="block w-full text-center text-slate-300">
+                                Every Jammi product is deeply rooted in ancient Ayurvedic texts. We preserve the integrity of these powerful botanicals to guarantee true, holistic wellness for the modern era.
+                            </LiveEditable>
                         </p>
                     </div>
                 </div>

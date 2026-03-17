@@ -10,6 +10,8 @@ interface LiveEditableProps {
   children: React.ReactNode;
   multiline?: boolean;
   className?: string;
+  inputType?: 'text' | 'number' | 'select';
+  options?: { label: string; value: string }[];
 }
 
 const LiveEditable: React.FC<LiveEditableProps> = ({ 
@@ -18,7 +20,9 @@ const LiveEditable: React.FC<LiveEditableProps> = ({
   field, 
   children, 
   multiline = false,
-  className = "" 
+  className = "",
+  inputType = 'text',
+  options = []
 }) => {
   const { isAdmin, isEditMode } = useAdmin();
   const [value, setValue] = useState<string>('');
@@ -66,7 +70,11 @@ const LiveEditable: React.FC<LiveEditableProps> = ({
     }
     setIsSaving(true);
     try {
-      await updateDocument(collection, docId, { [field]: value });
+      let valToSave: string | number = value;
+      if (inputType === 'number') {
+        valToSave = Number(value);
+      }
+      await updateDocument(collection, docId, { [field]: valToSave });
       setShowEditor(false);
     } catch (err) {
       console.error("LiveEdit Error:", err);
@@ -77,24 +85,47 @@ const LiveEditable: React.FC<LiveEditableProps> = ({
   };
 
   if (showEditor) {
+    let InputComponent;
+
+    if (inputType === 'select') {
+      InputComponent = (
+        <select
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-full bg-white border-2 border-saffron p-2 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron/20"
+          autoFocus
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      );
+    } else if (multiline && inputType === 'text') {
+      InputComponent = (
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-full bg-white border-2 border-saffron p-2 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron/20 min-h-[100px]"
+          autoFocus
+        />
+      );
+    } else {
+      InputComponent = (
+        <input
+          type={inputType === 'number' ? 'number' : 'text'}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-full bg-white border-2 border-saffron p-2 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron/20"
+          autoFocus
+        />
+      );
+    }
+
     return (
-      <div className={`relative group inline-block w-full min-w-[200px] ${className}`}>
-        {multiline ? (
-          <textarea
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full bg-white border-2 border-saffron p-2 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron/20 min-h-[100px]"
-            autoFocus
-          />
-        ) : (
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full bg-white border-2 border-saffron p-2 rounded text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron/20"
-            autoFocus
-          />
-        )}
+      <div className={`relative group inline-block w-full min-w-[100px] ${className}`}>
+        {InputComponent}
         <div className="absolute top-full right-0 mt-1 flex gap-2 z-[9999]">
           <button
             onClick={(e) => {
