@@ -1,0 +1,59 @@
+﻿
+> jammi-pharmaceuticals-digital-platform@0.0.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 10.1s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/44) ...
+node.exe : Error 
+occurred prerendering 
+page "/product/mahanar
+ayana". Read more: htt
+ps://nextjs.org/docs/m
+essages/prerender-erro
+r
+At line:1 char:1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (Error occu   
+ rred ...prerender    
+-error:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+ReferenceError: 
+location is not 
+defined
+    at <unknown> (C:\U
+sers\itzme\OneDrive\De
+sktop\jammi\jammi_1\.n
+ext\server\chunks\ssr\
+_pages_legacy_products
+_Mahanarayana_tsx_dd50
+e7ab._.js:1:209) {
+  digest: '868744864'
+}
+Export encountered an 
+error on /(public)/pro
+duct/mahanarayana/page
+: /product/mahanarayan
+a, exiting the build.
+Γ¿» Next.js build 
+worker exited with 
+code: 1 and signal: 
+null
