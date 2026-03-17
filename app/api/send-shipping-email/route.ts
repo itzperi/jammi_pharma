@@ -4,7 +4,12 @@ import { supabaseAdmin } from '../../../lib/supabase';
 import { rateLimit, getClientIp } from '../../../lib/rateLimit';
 import { OrderShippedEmail } from '../../../components/emails/OrderShippedEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization — avoids build failures when RESEND_API_KEY is not set
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  return new Resend(key);
+}
 
 export async function POST(req: NextRequest) {
   // ── Rate Limiting: 5 requests per minute per IP ───────────────────────────
@@ -64,6 +69,11 @@ export async function POST(req: NextRequest) {
         : String(order.shipping_address || '');
 
     // ── Send shipping email to customer ───────────────────────────────────
+    const resend = getResend();
+    if (!resend) {
+      console.warn('[send-shipping-email] RESEND_API_KEY not set — skipping email');
+      return NextResponse.json({ success: true, message: 'Email skipped (no API key)' });
+    }
     const { error: emailError } = await resend.emails.send({
       from: 'Jammi Pharmaceuticals <onboarding@resend.dev>',
       to: [order.customer_email],

@@ -7,7 +7,12 @@ import { OrderConfirmationEmail } from '../../../components/emails/OrderConfirma
 import { OrderConfirmationInternal } from '../../../components/emails/OrderConfirmationInternal';
 import { generateCustomerId } from '../../../lib/customers';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization — avoids build failures when RESEND_API_KEY is not set
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  return new Resend(key);
+}
 
 // ── Signature verification ─────────────────────────────────────────────────
 function verifyRazorpaySignature(body: string, signature: string | null, secret: string): boolean {
@@ -156,7 +161,8 @@ export async function POST(req: NextRequest) {
     const shippingAddress = formatAddress(order?.shipping_address);
 
     // Send to customer
-    if (customerEmail) {
+    const resend = getResend();
+    if (customerEmail && resend) {
       const { error: customerEmailError } = await resend.emails.send({
         from: 'Jammi Pharmaceuticals <onboarding@resend.dev>',
         to: [customerEmail],
@@ -178,26 +184,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Send to internal team (frontdesk + njammi)
-    const { error: internalEmailError } = await resend.emails.send({
-      from: 'Jammi Orders <onboarding@resend.dev>',
-      to: ['frontdesk@jammi.org', 'njammi@gmail.com'],
-      subject: `🔔 NEW ORDER ${orderNumber} — ₹${total.toLocaleString('en-IN')} | ${customerName}`,
-      react: OrderConfirmationInternal({
-        customerName,
-        customerEmail,
-        customerPhone: order?.customer_phone || payment.contact || '',
-        orderNumber,
-        items,
-        subtotal,
-        discount,
-        total,
-        shippingAddress,
-        paymentMethod: payment.method,
-        orderedAt: new Date().toISOString(),
-      }),
-    });
-    if (internalEmailError) {
-      console.error('[razorpay-webhook] Internal email error:', internalEmailError);
+    if (resend) {
+      const { error: internalEmailError } = await resend.emails.send({
+        from: 'Jammi Orders <onboarding@resend.dev>',
+        to: ['frontdesk@jammi.org', 'njammi@gmail.com'],
+        subject: `🔔 NEW ORDER ${orderNumber} — ₹${total.toLocaleString('en-IN')} | ${customerName}`,
+        react: OrderConfirmationInternal({
+          customerName,
+          customerEmail,
+          customerPhone: order?.customer_phone || payment.contact || '',
+          orderNumber,
+          items,
+          subtotal,
+          discount,
+          total,
+          shippingAddress,
+          paymentMethod: payment.method,
+          orderedAt: new Date().toISOString(),
+        }),
+      });
+      if (internalEmailError) {
+        console.error('[razorpay-webhook] Internal email error:', internalEmailError);
+      }
     }
 
     return NextResponse.json({ received: true, event: 'payment.captured' });
