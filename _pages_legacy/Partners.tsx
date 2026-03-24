@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useFederationStore } from '../store/federationStore';
 
+import LiveEditable from '../components/admin/LiveEditable';
+import { useCMSContent } from '../hooks/useCMSContent';
+
 const Partners: React.FC = () => {
+    const { content, loading } = useCMSContent('partners');
     const [formStatus, setFormStatus] = useState<'idle' | 'submitted'>('idle');
     const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
@@ -30,31 +34,21 @@ const Partners: React.FC = () => {
         setFormStatus('submitted');
     };
 
+    if (loading) return <div className="min-h-screen pt-24 bg-background-light flex items-center justify-center">Loading Partner Portal...</div>;
+
+    const CMS = ({ section, field, fallback, inputType = 'text', multiline = false, className = '' }: any) => (
+        <LiveEditable cmsKey={{ page: 'partners', section, content_key: field }} inputType={inputType} multiline={multiline} className={`inline-block ${className}`}>
+            {content?.[section]?.[field] || fallback}
+        </LiveEditable>
+    );
+
     const faqs = [
-        {
-            q: "Is there a joining fee?",
-            a: "No. Partnership is free. You simply buy products at wholesale and sell at MRP. The margin is your earning."
-        },
-        {
-            q: "What is the minimum order?",
-            a: "There is no minimum order. Order what you need for your current patients. We deliver pan-India."
-        },
-        {
-            q: "How quickly do orders arrive?",
-            a: "Standard delivery within 5–7 business days. Express options available for urgent requirements."
-        },
-        {
-            q: "Can I return unsold products?",
-            a: "Yes, unopened products within shelf life can be returned. Details in the partner agreement."
-        },
-        {
-            q: "Do I get exclusive territory?",
-            a: "We do not enforce exclusive territories. Multiple practitioners in a city can be partners. Your clinical skill and patient relationships are your competitive advantage, not artificial scarcity."
-        },
-        {
-            q: "How is this different from the JAM Federation?",
-            a: "The Jammi Partner Programme is a commercial product partnership. The JAM Federation is a cooperative movement with democratic governance. You can be a product partner without joining the federation, or do both. Many partners choose to join the federation for the additional benefits of community, education, and collective advocacy."
-        }
+        { q: "Is there a joining fee?", a: "No. Partnership is free. You simply buy products at wholesale and sell at MRP. The margin is your earning.", field: 'faq1' },
+        { q: "What is the minimum order?", a: "There is no minimum order. Order what you need for your current patients. We deliver pan-India.", field: 'faq2' },
+        { q: "How quickly do orders arrive?", a: "Standard delivery within 5–7 business days. Express options available for urgent requirements.", field: 'faq3' },
+        { q: "Can I return unsold products?", a: "Yes, unopened products within shelf life can be returned. Details in the partner agreement.", field: 'faq4' },
+        { q: "Do I get exclusive territory?", a: "We do not enforce exclusive territories. Multiple practitioners in a city can be partners. Your clinical skill and patient relationships are your competitive advantage, not artificial scarcity.", field: 'faq5' },
+        { q: "How is this different from the JAM Federation?", a: "The Jammi Partner Programme is a commercial product partnership. The JAM Federation is a cooperative movement with democratic governance. You can be a product partner without joining the federation, or do both. Many partners choose to join the federation for the additional benefits of community, education, and collective advocacy.", field: 'faq6' }
     ];
 
     return (
@@ -64,17 +58,19 @@ const Partners: React.FC = () => {
             <section className="bg-background-light py-20 lg:py-32 border-b border-slate-200">
                 <div className="max-w-5xl mx-auto px-6 lg:px-10 text-center">
                     <span className="text-secondary font-bold uppercase tracking-widest text-xs mb-6 block border border-secondary/20 py-1.5 px-4 rounded-full w-max mx-auto bg-white/50">
-                        JAMMI PHARMA PARTNER PROGRAMME
+                        <CMS section="hero" field="badge" fallback="JAMMI PHARMA PARTNER PROGRAMME" />
                     </span>
                     <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl leading-tight mb-8 text-secondary font-bold">
-                        Your Clinic. Our Formulations. <br className="hidden sm:block" />
-                        <span className="text-primary italic">Shared Success.</span>
+                        <CMS section="hero" field="titleLine1" fallback="Your Clinic. Our Formulations." /> <br className="hidden sm:block" />
+                        <span className="text-primary italic">
+                            <CMS section="hero" field="titleLine2" fallback="Shared Success." />
+                        </span>
                     </h1>
                     <p className="text-slate-600 text-xl leading-relaxed max-w-3xl mx-auto mb-10">
-                        Partner with India’s oldest Ayurvedic pharmaceutical house. Add Jammi’s 128-year, AYUSH-licensed product line to your practice. Earn healthy margins. Give your patients medicine that works.
+                        <CMS section="hero" field="subtext" multiline fallback="Partner with India’s oldest Ayurvedic pharmaceutical house. Add Jammi’s 128-year, AYUSH-licensed product line to your practice. Earn healthy margins. Give your patients medicine that works." />
                     </p>
                     <a href="#apply" className="inline-flex bg-primary text-white font-bold px-10 py-5 rounded-full hover:bg-secondary transition-colors uppercase tracking-widest shadow-xl shadow-primary/20 leading-none">
-                        APPLY TO PARTNER
+                        <CMS section="hero" field="ctaText" fallback="APPLY TO PARTNER" />
                     </a>
                 </div>
             </section>
@@ -83,7 +79,9 @@ const Partners: React.FC = () => {
             <section className="py-20 lg:py-32 bg-white">
                 <div className="max-w-7xl mx-auto px-6 lg:px-10">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl lg:text-5xl font-display font-bold text-secondary">How It Works</h2>
+                        <h2 className="text-3xl lg:text-5xl font-display font-bold text-secondary">
+                            <CMS section="howItWorks" field="headline" fallback="How It Works" />
+                        </h2>
                         <div className="w-16 h-1 bg-primary mx-auto rounded-full mt-6"></div>
                     </div>
 
@@ -91,16 +89,20 @@ const Partners: React.FC = () => {
                         <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-slate-200 z-0"></div>
 
                         {[
-                            { step: '1', title: 'Apply', desc: 'Fill in a short application. We verify your qualifications and clinic. Approval within 72 hours.' },
-                            { step: '2', title: 'Onboard', desc: 'Receive your wholesale price list, product catalog, and clinic branding kit. Place your first order at partner pricing.' },
-                            { step: '3', title: 'Prescribe & Earn', desc: 'Prescribe Jammi formulations to your patients. Dispense directly from your clinic. The margin is your revenue.' }
+                            { step: '1', title: 'Apply', desc: 'Fill in a short application. We verify your qualifications and clinic. Approval within 72 hours.', field: 'step1' },
+                            { step: '2', title: 'Onboard', desc: 'Receive your wholesale price list, product catalog, and clinic branding kit. Place your first order at partner pricing.', field: 'step2' },
+                            { step: '3', title: 'Prescribe & Earn', desc: 'Prescribe Jammi formulations to your patients. Dispense directly from your clinic. The margin is your revenue.', field: 'step3' }
                         ].map((item, i) => (
                             <div key={i} className="relative z-10 text-center bg-white p-8 border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div className="w-16 h-16 mx-auto bg-secondary text-primary text-2xl font-bold rounded-full flex items-center justify-center mb-6 font-display border-4 border-white shadow-sm">
                                     {item.step}
                                 </div>
-                                <h3 className="text-xl font-bold text-secondary mb-4">{item.title}</h3>
-                                <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+                                <h3 className="text-xl font-bold text-secondary mb-4">
+                                    <CMS section="howItWorks" field={`${item.field}Title`} fallback={item.title} />
+                                </h3>
+                                <p className="text-slate-600 text-sm leading-relaxed">
+                                    <CMS section="howItWorks" field={`${item.field}Desc`} multiline fallback={item.desc} />
+                                </p>
                             </div>
                         ))}
                     </div>
@@ -116,16 +118,20 @@ const Partners: React.FC = () => {
                     {/* Section D: Numbers (Moved up for impact) */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-24 border-b border-white/10 pb-16 text-center">
                         {[
-                            { metric: 'Formulations Available', value: '100+' },
-                            { metric: 'Years of Clinical Use', value: '128' },
-                            { metric: 'Partner Margin Range', value: '25–30%' },
-                            { metric: 'Minimum Order', value: 'None' },
-                            { metric: 'Delivery Coverage', value: 'Pan-India' },
-                            { metric: 'Licensing', value: 'AYUSH / GMP' }
+                            { metric: 'Formulations Available', value: '100+', field: 'stat1' },
+                            { metric: 'Years of Clinical Use', value: '128', field: 'stat2' },
+                            { metric: 'Partner Margin Range', value: '25–30%', field: 'stat3' },
+                            { metric: 'Minimum Order', value: 'None', field: 'stat4' },
+                            { metric: 'Delivery Coverage', value: 'Pan-India', field: 'stat5' },
+                            { metric: 'Licensing', value: 'AYUSH / GMP', field: 'stat6' }
                         ].map((stat, i) => (
                             <div key={i}>
-                                <div className="text-3xl lg:text-4xl font-bold text-primary mb-2 font-display">{stat.value}</div>
-                                <div className="text-white/60 text-xs uppercase tracking-widest font-bold">{stat.metric}</div>
+                                <div className="text-3xl lg:text-4xl font-bold text-primary mb-2 font-display">
+                                    <CMS section="metrics" field={`${stat.field}Value`} fallback={stat.value} />
+                                </div>
+                                <div className="text-white/60 text-xs uppercase tracking-widest font-bold">
+                                    <CMS section="metrics" field={`${stat.field}Label`} fallback={stat.metric} />
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -137,20 +143,24 @@ const Partners: React.FC = () => {
                             <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-10"><span className="text-primary">What</span> You Get</h2>
                             <div className="space-y-8">
                                 {[
-                                    { title: 'Wholesale Pricing', desc: '25–30% below MRP on all Jammi products. The full margin stays with you.' },
-                                    { title: '100+ Formulations', desc: 'Liver care, skin & hair, therapeutics, rasayanas, thailams, ghritams, and more. Complete Ayurvedic pharmacopoeia under one brand.' },
-                                    { title: 'Zero Inventory Risk', desc: 'No minimum order. No stocking requirement. Order as you prescribe. We deliver pan-India.' },
-                                    { title: 'AYUSH Compliance', desc: 'Every product fully licensed under AYUSH regulations. GMP-certified manufacturing. You prescribe with complete regulatory confidence.' },
-                                    { title: 'Clinic Branding Kit', desc: '"Jammi Authorised Partner" signage for your clinic. Product display materials. Patient information leaflets. Branded prescription pad templates.' },
-                                    { title: 'Marketing Support', desc: 'Featured on jammi.in as an authorised partner. Social media co-promotion. Local SEO support. Patient referrals from the Jammi platform to your clinic.' },
-                                    { title: 'Clinical Knowledge', desc: 'Access to Jammi’s 128-year formulation knowledge base. Dosage protocols, contraindications, combination guides — all documented by three generations of practitioners.' },
-                                    { title: 'Dedicated Support', desc: 'Partner WhatsApp group with direct access to the Jammi clinical team. Order support. Product queries. Clinical discussions with fellow partner practitioners.' }
+                                    { title: 'Wholesale Pricing', desc: '25–30% below MRP on all Jammi products. The full margin stays with you.', field: 'get1' },
+                                    { title: '100+ Formulations', desc: 'Liver care, skin & hair, therapeutics, rasayanas, thailams, ghritams, and more. Complete Ayurvedic pharmacopoeia under one brand.', field: 'get2' },
+                                    { title: 'Zero Inventory Risk', desc: 'No minimum order. No stocking requirement. Order as you prescribe. We deliver pan-India.', field: 'get3' },
+                                    { title: 'AYUSH Compliance', desc: 'Every product fully licensed under AYUSH regulations. GMP-certified manufacturing. You prescribe with complete regulatory confidence.', field: 'get4' },
+                                    { title: 'Clinic Branding Kit', desc: '"Jammi Authorised Partner" signage for your clinic. Product display materials. Patient information leaflets. Branded prescription pad templates.', field: 'get5' },
+                                    { title: 'Marketing Support', desc: 'Featured on jammi.in as an authorised partner. Social media co-promotion. Local SEO support. Patient referrals from the Jammi platform to your clinic.', field: 'get6' },
+                                    { title: 'Clinical Knowledge', desc: 'Access to Jammi’s 128-year formulation knowledge base. Dosage protocols, contraindications, combination guides — all documented by three generations of practitioners.', field: 'get7' },
+                                    { title: 'Dedicated Support', desc: 'Partner WhatsApp group with direct access to the Jammi clinical team. Order support. Product queries. Clinical discussions with fellow partner practitioners.', field: 'get8' }
                                 ].map((item, i) => (
                                     <div key={i} className="flex gap-4">
                                         <span className="material-symbols-outlined text-primary flex-shrink-0 mt-1">check_circle</span>
                                         <div>
-                                            <h4 className="font-bold text-white mb-1 tracking-wide">{item.title}</h4>
-                                            <p className="text-white/60 text-sm leading-relaxed">{item.desc}</p>
+                                            <h4 className="font-bold text-white mb-1 tracking-wide">
+                                                <CMS section="benefits" field={`${item.field}Title`} fallback={item.title} />
+                                            </h4>
+                                            <p className="text-white/60 text-sm leading-relaxed">
+                                                <CMS section="benefits" field={`${item.field}Desc`} multiline fallback={item.desc} />
+                                            </p>
                                         </div>
                                     </div>
                                 ))}
@@ -165,22 +175,26 @@ const Partners: React.FC = () => {
 
                                 <div className="space-y-6">
                                     {[
-                                        { from: 'You prescribe and dispense Jammi products', to: 'Expanded distribution without retail overhead' },
-                                        { from: 'Your clinical credibility endorses the product', to: 'Doctor-recommended trust that no advertisement can buy' },
-                                        { from: 'You share patient feedback and clinical outcomes', to: 'Real-world efficacy data that strengthens the formulary' },
-                                        { from: 'Your clinic displays Jammi branding', to: 'Brand visibility in locations where patients make decisions' },
-                                        { from: 'You grow your practice using our products', to: 'We grow our reach through your practice' }
+                                        { from: 'You prescribe and dispense Jammi products', to: 'Expanded distribution without retail overhead', field: 'win1' },
+                                        { from: 'Your clinical credibility endorses the product', to: 'Doctor-recommended trust that no advertisement can buy', field: 'win2' },
+                                        { from: 'You share patient feedback and clinical outcomes', to: 'Real-world efficacy data that strengthens the formulary', field: 'win3' },
+                                        { from: 'Your clinic displays Jammi branding', to: 'Brand visibility in locations where patients make decisions', field: 'win4' },
+                                        { from: 'You grow your practice using our products', to: 'We grow our reach through your practice', field: 'win5' }
                                     ].map((item, i) => (
                                         <div key={i} className="bg-black/20 p-5 rounded-xl border border-white/5 shadow-sm">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="text-white/50 text-[10px] uppercase font-bold tracking-widest">FROM YOU</span>
                                             </div>
-                                            <p className="font-bold text-sm mb-4 leading-relaxed">{item.from}</p>
+                                            <p className="font-bold text-sm mb-4 leading-relaxed">
+                                                <CMS section="proposition" field={`${item.field}From`} fallback={item.from} />
+                                            </p>
 
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="text-primary text-[10px] uppercase font-bold tracking-widest">THE VALUE TO JAMMI</span>
                                             </div>
-                                            <p className="text-primary font-bold text-sm leading-relaxed">{item.to}</p>
+                                            <p className="text-primary font-bold text-sm leading-relaxed">
+                                                <CMS section="proposition" field={`${item.field}To`} fallback={item.to} />
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
@@ -194,26 +208,32 @@ const Partners: React.FC = () => {
             <section className="py-24 lg:py-32 bg-background-light">
                 <div className="max-w-7xl mx-auto px-6 lg:px-10">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl lg:text-5xl font-display font-bold text-secondary mb-4">The Jammi Formulary</h2>
+                        <h2 className="text-3xl lg:text-5xl font-display font-bold text-secondary mb-4">
+                            <CMS section="formulary" field="headline" fallback="The Jammi Formulary" />
+                        </h2>
                         <p className="text-slate-600 max-w-2xl mx-auto">100+ proven formulations. A complete Ayurvedic pharmacopoeia under one trusted brand.</p>
                         <div className="w-16 h-1 bg-primary mx-auto rounded-full mt-6"></div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                         {[
-                            { title: 'Liver Care', desc: 'Flagship. The legendary LiverCure and related formulations.', icon: 'medical_services' },
-                            { title: 'Skin & Hair Care', desc: 'Kumkumadi, Neelibringadi, and traditional beauty therapeutics.', icon: 'face_retouching_natural' },
-                            { title: 'Rasayanas & Tonics', desc: 'Chyawanprash, Ashwagandha Rasayana, rejuvenation formulations.', icon: 'local_florist' },
-                            { title: 'Thailams (Oils)', desc: 'Dhanwantharam, Kottamchukkadi, and therapeutic massage oils.', icon: 'water_drop' },
-                            { title: 'Ghritams (Ghee-based)', desc: 'Brahmi Ghritam, Triphala Ghritam, neurological and digestive formulations.', icon: 'spa' },
-                            { title: 'General Therapeutics', desc: 'Digestive, respiratory, musculoskeletal, and chronic condition formulations.', icon: 'health_and_safety' }
+                            { title: 'Liver Care', desc: 'Flagship. The legendary LiverCure and related formulations.', icon: 'medical_services', field: 'cat1' },
+                            { title: 'Skin & Hair Care', desc: 'Kumkumadi, Neelibringadi, and traditional beauty therapeutics.', icon: 'face_retouching_natural', field: 'cat2' },
+                            { title: 'Rasayanas & Tonics', desc: 'Chyawanprash, Ashwagandha Rasayana, rejuvenation formulations.', icon: 'local_florist', field: 'cat3' },
+                            { title: 'Thailams (Oils)', desc: 'Dhanwantharam, Kottamchukkadi, and therapeutic massage oils.', icon: 'water_drop', field: 'cat4' },
+                            { title: 'Ghritams (Ghee-based)', desc: 'Brahmi Ghritam, Triphala Ghritam, neurological and digestive formulations.', icon: 'spa', field: 'cat5' },
+                            { title: 'General Therapeutics', desc: 'Digestive, respiratory, musculoskeletal, and chronic condition formulations.', icon: 'health_and_safety', field: 'cat6' }
                         ].map((cat, i) => (
                             <div key={i} className="bg-white p-8 rounded-2xl border border-slate-200 hover:border-primary/50 transition-colors shadow-sm hover:shadow-md group">
                                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary transition-colors">
                                     <span className="material-symbols-outlined text-primary group-hover:text-white text-2xl transition-colors">{cat.icon}</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-secondary mb-3">{cat.title}</h3>
-                                <p className="text-slate-600 text-sm mb-6 min-h-[40px] leading-relaxed">{cat.desc}</p>
+                                <h3 className="text-xl font-bold text-secondary mb-3">
+                                    <CMS section="formulary" field={`${cat.field}Title`} fallback={cat.title} />
+                                </h3>
+                                <p className="text-slate-600 text-sm mb-6 min-h-[40px] leading-relaxed">
+                                    <CMS section="formulary" field={`${cat.field}Desc`} multiline fallback={cat.desc} />
+                                </p>
                                 <Link href="/shop" className="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-2 group-hover:text-secondary transition-colors">
                                     VIEW CATEGORY <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                 </Link>
@@ -234,7 +254,9 @@ const Partners: React.FC = () => {
             <section id="apply" className="py-24 lg:py-32 bg-white">
                 <div className="max-w-4xl mx-auto px-6 lg:px-10">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl lg:text-5xl font-display font-bold text-secondary mb-4">Start Prescribing Jammi</h2>
+                        <h2 className="text-4xl lg:text-5xl font-display font-bold text-secondary mb-4">
+                            <CMS section="apply" field="headline" fallback="Start Prescribing Jammi" />
+                        </h2>
                         <p className="text-slate-600 text-lg">Provide your details below to begin the partnership process.</p>
                     </div>
 
@@ -365,7 +387,9 @@ const Partners: React.FC = () => {
                 <div className="max-w-4xl mx-auto px-6 lg:px-10">
                     <div className="text-center mb-16">
                         <span className="text-primary font-bold tracking-widest uppercase text-sm mb-4 block">Got Questions?</span>
-                        <h2 className="text-3xl lg:text-5xl font-display font-bold text-secondary">Frequently Asked Questions</h2>
+                        <h2 className="text-3xl lg:text-5xl font-display font-bold text-secondary">
+                            <CMS section="faq" field="headline" fallback="Frequently Asked Questions" />
+                        </h2>
                     </div>
                     <div className="space-y-4">
                         {faqs.map((faq, index) => (
@@ -374,7 +398,9 @@ const Partners: React.FC = () => {
                                     onClick={() => setActiveFaq(activeFaq === index ? null : index)}
                                     className="w-full text-left px-8 py-6 flex justify-between items-center focus:outline-none hover:bg-slate-50 transition-colors"
                                 >
-                                    <span className="font-bold text-secondary text-lg pr-4">{faq.q}</span>
+                                    <span className="font-bold text-secondary text-lg pr-4">
+                                        <CMS section="faq" field={`${faq.field}Q`} fallback={faq.q} />
+                                    </span>
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-primary/10 transition-transform duration-300 ${activeFaq === index ? 'rotate-180 bg-primary/20' : ''}`}>
                                         <span className={`material-symbols-outlined ${activeFaq === index ? 'text-primary' : 'text-slate-500'}`}>
                                             expand_more
@@ -383,7 +409,7 @@ const Partners: React.FC = () => {
                                 </button>
                                 <div className={`px-8 overflow-hidden transition-all duration-300 ease-in-out ${activeFaq === index ? 'max-h-96 pb-8 opacity-100' : 'max-h-0 opacity-0'}`}>
                                     <p className="text-slate-600 leading-relaxed pt-2 border-t border-slate-100">
-                                        {faq.a}
+                                        <CMS section="faq" field={`${faq.field}A`} multiline fallback={faq.a} />
                                     </p>
                                 </div>
                             </div>

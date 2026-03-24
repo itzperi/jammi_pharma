@@ -26,12 +26,14 @@ interface Product {
     stockStatus?: string;
 }
 
-export default function ProductTemplate({ productId }: { productId: string }) {
+export default function ProductTemplate({ productId, initialData }: { productId: string, initialData?: any }) {
     const router = useRouter();
-    const [product, setProduct] = useState<Product | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [product, setProduct] = useState<Product | null>(initialData || null);
+    const [isLoading, setIsLoading] = useState(!initialData);
     const [quantity, setQuantity] = useState(1);
     const [selectedAngle, setSelectedAngle] = useState(0);
+    const [addedToCart, setAddedToCart] = useState(false);
+    const [addingToCart, setAddingToCart] = useState(false);
     const { addToCart } = useCart();
     const { isAdmin, isEditMode } = useAdmin();
 
@@ -48,25 +50,25 @@ export default function ProductTemplate({ productId }: { productId: string }) {
     const [reviewSuccess, setReviewSuccess] = useState(false);
 
     useEffect(() => {
-        setIsLoading(true);
+        if (!initialData) setIsLoading(true);
 
         const unsubProduct = subscribeToDocument('products', productId, (dbProduct) => {
             if (dbProduct && !dbProduct.deleted && dbProduct.status !== 'Draft') {
                 setProduct({
                     id: dbProduct.id,
                     name: dbProduct.name,
-                    label: dbProduct.category || 'Wellness',
+                    label: dbProduct.short_description || dbProduct.category || 'Wellness',
                     shortDesc: dbProduct.description ? dbProduct.description.replace(/<[^>]+>/g, '') : (dbProduct.shortDesc || 'Traditional formulation.'),
-                    price: dbProduct.basePrice || dbProduct.price || 0,
-                    image: dbProduct.images?.[0] || dbProduct.image || 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop',
+                    price: dbProduct.price || 0,
+                    image: dbProduct.images?.[0] || dbProduct.image || '...',
                     category: dbProduct.category || 'Wellness',
                     features: dbProduct.features || [],
                     botanicals: dbProduct.botanicals || [],
                     ritual: dbProduct.ritual || [],
-                    stockStatus: dbProduct.stockStatus || 'In Stock'
+                    stockStatus: dbProduct.stock_status || 'In Stock'
                 });
             } else if (!dbProduct || (dbProduct.deleted && dbProduct.status)) {
-                // If soft deleted from DB, don't fallback to mock
+                // If soft deleted from DB, don't fallback to mock if it's already in DB as deleted
                 if (dbProduct && dbProduct.deleted) {
                      setProduct(null);
                 } else {
@@ -80,6 +82,7 @@ export default function ProductTemplate({ productId }: { productId: string }) {
             }
             setIsLoading(false);
         });
+
 
         const unsubReviews = subscribeToCollection('reviews', (r) => {
             setReviews(r.filter(review => review.productId === productId && review.status === 'Approved').sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
@@ -290,14 +293,45 @@ export default function ProductTemplate({ productId }: { productId: string }) {
                                 </div>
                                 <button 
                                     onClick={async () => {
-                                        await addToCart(product.id, quantity);
-                                        alert('Added to cart!');
+                                        if (addingToCart) return;
+                                        setAddingToCart(true);
+                                        try {
+                                            await addToCart({
+                                                id: product.id,
+                                                name: product.name,
+                                                price: product.price,
+                                                image: product.image,
+                                                slug: product.id,
+                                                quantity: quantity,
+                                                variant_id: null,
+                                                variant_label: null
+                                            });
+                                            setAddedToCart(true);
+                                            setTimeout(() => setAddedToCart(false), 2200);
+                                        } finally {
+                                            setAddingToCart(false);
+                                        }
                                     }}
-                                    className="flex-1 bg-secondary text-white font-bold text-base sm:text-lg h-14 rounded-xl shadow-lg shadow-secondary/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
-                                    <span className="material-symbols-outlined flex">shopping_basket</span>
-                                    Add to Cart
+                                    disabled={addingToCart}
+                                    className={`flex-1 font-bold text-base sm:text-lg h-14 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 ${
+                                        addedToCart
+                                            ? 'bg-green-600 shadow-green-600/20 text-white'
+                                            : 'bg-secondary text-white shadow-secondary/20 hover:bg-slate-800'
+                                    }`}>
+                                    <span className="material-symbols-outlined flex">
+                                        {addedToCart ? 'check_circle' : addingToCart ? 'hourglass_top' : 'shopping_basket'}
+                                    </span>
+                                    {addedToCart ? 'Added to Cart!' : addingToCart ? 'Adding...' : 'Add to Cart'}
                                 </button>
                             </div>
+
+                            {/* Toast Notification */}
+                            {addedToCart && (
+                                <div className="fixed bottom-6 right-6 bg-forest text-white px-5 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3 font-medium animate-in fade-in slide-in-from-bottom-5 duration-300">
+                                    <span className="material-symbols-outlined text-saffron">check_circle</span>
+                                    {product.name} added to cart
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

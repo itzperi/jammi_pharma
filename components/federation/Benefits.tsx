@@ -42,7 +42,7 @@ export default function Benefits() {
 
             <div className="relative z-10 max-w-6xl mx-auto">
                 <h2 className="text-center font-['Playfair_Display',serif] italic text-4xl md:text-[52px] text-[#1C1411] mb-16">
-                    <LiveEditable collection="site_content" docId="federation_benefits" field="main_title">What Membership Grants You</LiveEditable>
+                    <LiveEditable cmsKey={{ page: 'federation', section: 'benefits', content_key: 'main_title' }}>What Membership Grants You</LiveEditable>
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -58,10 +58,10 @@ export default function Benefits() {
                             </div>
                             
                             <h3 className="text-xl font-['Playfair_Display',serif] font-bold text-[#1C1411] mb-3">
-                                <LiveEditable collection="site_content" docId={`federation_benefit_${i}`} field="title">{benefit.title}</LiveEditable>
+                                <LiveEditable cmsKey={{ page: 'federation', section: 'benefits', content_key: `benefit_${i}_title` }}>{benefit.title}</LiveEditable>
                             </h3>
                             <p className="text-[#2C2420] font-['EB_Garamond',serif] text-lg leading-snug">
-                                <LiveEditable collection="site_content" docId={`federation_benefit_${i}`} field="text" multiline>{benefit.text}</LiveEditable>
+                                <LiveEditable cmsKey={{ page: 'federation', section: 'benefits', content_key: `benefit_${i}_text` }} multiline>{benefit.text}</LiveEditable>
                             </p>
                         </motion.div>
                     ))}

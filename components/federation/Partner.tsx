@@ -70,13 +70,13 @@ export default function Partner() {
                 {/* Text Block */}
                 <div className="flex-1">
                     <p className="font-['Cinzel',serif] text-[#C9A84C] tracking-[0.2em] text-sm mb-4">
-                        <LiveEditable collection="site_content" docId="federation_partner" field="subtitle">AN ELITE ECOSYSTEM</LiveEditable>
+                        <LiveEditable cmsKey={{ page: 'federation', section: 'partner', content_key: 'subtitle' }}>AN ELITE ECOSYSTEM</LiveEditable>
                     </p>
                     <h2 className="text-5xl md:text-[80px] font-['Cormorant_SC',serif] text-[#C9A84C] leading-none mb-8">
-                        <LiveEditable collection="site_content" docId="federation_partner" field="title">PARTNER WITH US</LiveEditable>
+                        <LiveEditable cmsKey={{ page: 'federation', section: 'partner', content_key: 'title' }}>PARTNER WITH US</LiveEditable>
                     </h2>
                     <p className="text-[#F0EBE1] font-['EB_Garamond',serif] italic text-xl leading-relaxed max-w-lg mb-12 opacity-80">
-                        <LiveEditable collection="site_content" docId="federation_partner" field="description" multiline>Join an illustrious circle of physicians, researchers, and holistic practitioners dedicated to bringing empirical rigor to Ayurvedic tradition.</LiveEditable>
+                        <LiveEditable cmsKey={{ page: 'federation', section: 'partner', content_key: 'description' }} multiline>Join an illustrious circle of physicians, researchers, and holistic practitioners dedicated to bringing empirical rigor to Ayurvedic tradition.</LiveEditable>
                     </p>
 
                     <button className="flex items-center gap-2 font-['Cinzel',serif] text-[#C9A84C] text-sm hover:text-white transition-colors duration-300">

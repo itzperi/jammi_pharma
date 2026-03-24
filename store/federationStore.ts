@@ -29,16 +29,23 @@ export const useFederationStore = create<FederationStore>((set, get) => {
         setupSubscription('customers', 'customers');
         setupSubscription('products', 'products', 'category', true);
 
-        // Check for hardcoded admin session
-        if (sessionStorage.getItem("jammi_admin_session") === "true") {
-            set({ isAdminLoggedIn: true, sanctumModalOpen: false });
-        }
+        const checkAuth = () => {
+            if (sessionStorage.getItem("jammi_admin_session") === "true" || localStorage.getItem("jammi_cms_session") === "true") {
+                set({ isAdminLoggedIn: true, sanctumModalOpen: false });
+            } else {
+                set({ isAdminLoggedIn: false });
+            }
+        };
+
+        checkAuth();
+        window.addEventListener('jammi_cms_unlocked', checkAuth);
+        window.addEventListener('storage', checkAuth);
 
         // Auth listener
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
                 set({ userUID: session.user.id });
-                if (session.user.email === 'admin@jammi.com') {
+                if (session.user.email === 'admin@jammipharma.com' || session.user.email === 'admin@jammi.com') {
                     set({ isAdminLoggedIn: true, sanctumModalOpen: false });
                 }
                 
@@ -47,7 +54,7 @@ export const useFederationStore = create<FederationStore>((set, get) => {
                     set({ currentUserProfile: data as DoctorProfile });
                 }
             } else if (sessionStorage.getItem("jammi_admin_session") !== "true") {
-                set({ isAdminLoggedIn: false, userUID: null, currentUserProfile: null });
+                set({ userUID: null, currentUserProfile: null });
             }
         });
     }
@@ -243,8 +250,10 @@ export const useFederationStore = create<FederationStore>((set, get) => {
 
         loginAdmin: async (username, pass) => {
             try {
-                if (username.trim() === 'JammiPharma' && pass.trim() === 'Jammi@007') {
+                if (username.trim() === 'admin@jammipharma.com' && pass.trim() === 'Jammi@007') {
                     set({ isAdminLoggedIn: true, sanctumModalOpen: false });
+                    localStorage.setItem("jammi_admin_session", "true");
+                    localStorage.setItem("jammi_cms_session", "true");
                     sessionStorage.setItem("jammi_admin_session", "true");
                     return true;
                 }
@@ -266,7 +275,10 @@ export const useFederationStore = create<FederationStore>((set, get) => {
         logoutAdmin: async () => {
             try {
                 await supabase.auth.signOut();
+                localStorage.removeItem("jammi_cms_session");
+                localStorage.removeItem("jammi_admin_session");
                 sessionStorage.removeItem("jammi_admin_session");
+                window.dispatchEvent(new Event('jammi_cms_unlocked'));
                 set({ isAdminLoggedIn: false });
             } catch (error) {
                 console.error("Error logging out:", error);

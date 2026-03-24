@@ -6,6 +6,8 @@ export type Bucket =
   | 'review-images'
   | 'bundle-images'
   | 'site-assets'
+  | 'banners'
+  | 'cms-images'
   | 'reports';
 
 /**

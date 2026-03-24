@@ -98,7 +98,7 @@ export default function Hero() {
                 </motion.svg>
 
                 <h1 className="text-4xl sm:text-6xl md:text-[90px] leading-none mb-8 text-[#C9A84C] font-[var(--font-cormorant)]">
-                    <LiveEditable collection="site_content" docId="federation_hero" field="headline" multiline className="block w-full">
+                    <LiveEditable cmsKey={{ page: 'federation', section: 'hero', content_key: 'headline' }} multiline className="block w-full">
                         {headlineText}
                     </LiveEditable>
                 </h1>
@@ -109,7 +109,7 @@ export default function Hero() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 1.5 }}
                 >
-                    <LiveEditable collection="site_content" docId="federation_hero" field="subtext">A legacy of healing, verified by modern research.</LiveEditable>
+                    <LiveEditable cmsKey={{ page: 'federation', section: 'hero', content_key: 'subtext' }}>A legacy of healing, verified by modern research.</LiveEditable>
                 </motion.p>
 
                 <motion.div 

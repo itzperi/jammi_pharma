@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import ImageUploader from '../ImageUploader';
+import { useAdminSave } from '@/hooks/useAdminSave';
+import { useToast } from '@/components/Toast';
 
 // Dynamically import Quill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -42,7 +44,8 @@ export default function ProductForm({ initialData = null, productId = '', isEdit
   const [metaDescription, setMetaDescription] = useState('');
 
   const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const { saving: isSaving, saveProduct } = useAdminSave();
+  const { addToast } = useToast();
   
   const handleNewImage = (urls: string[]) => {
     setImages(prev => [...prev, ...urls].slice(0, 5)); // Limit to 5
@@ -114,33 +117,24 @@ export default function ProductForm({ initialData = null, productId = '', isEdit
       return;
     }
     
-    setIsSaving(true);
     const payload = {
+      ...(isEdit && { id: productId }),
       name, slug, description, images, variants, status: submitStatus,
       category, price: Number(price), discountPrice: discountPrice ? Number(discountPrice) : null,
       stock: Number(stock), lowStockAlert: Number(lowStockAlert), metaTitle, metaDescription
     };
 
     try {
-      if (isEdit) {
-        await fetch(`/api/admin/products/${productId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+      const result = await saveProduct(payload, !isEdit);
+      if (result) {
+        addToast('Product saved successfully!', 'success');
+        router.push('/admin/products');
       } else {
-        await fetch('/api/admin/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        addToast('Error saving product. Check your permissions.', 'error');
       }
-      router.push('/admin/products');
     } catch (err) {
       console.error(err);
-      alert("Error saving product");
-    } finally {
-      setIsSaving(false);
+      addToast('Error saving product.', 'error');
     }
   };
 

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase';
+import { supabaseAdmin } from './adminAuth';
 
 export async function generateCustomerId(): Promise<string> {
   const { data } = await supabaseAdmin

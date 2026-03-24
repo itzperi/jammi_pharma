@@ -1,8 +1,10 @@
 
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useCart } from '../hooks/useCart';
+import LiveEditable from './admin/LiveEditable';
 
 interface ProductCardProps {
   product: {
@@ -17,6 +19,33 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const router = useRouter();
+  const { addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleQuickAdd = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (adding || added) return;
+    setAdding(true);
+    try {
+      await addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        slug: product.id,
+        quantity: 1,
+        variant_id: null,
+        variant_label: null
+      });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    } catch (err) {
+      console.error('Failed to add to cart', err);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <div className="group cursor-pointer" onClick={() => router.push(`/product/${product.id}`)}>
@@ -32,18 +61,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {product.label}
         </div>
       </div>
-      <h4 className="font-sans font-bold text-2xl mb-2 group-hover:text-primary transition-colors text-slate-900">{product.name}</h4>
-      <p className="text-slate-500 text-sm mb-4 font-dm line-clamp-2">{product.shortDesc}</p>
+      <h4 className="font-sans font-bold text-2xl mb-2 group-hover:text-primary transition-colors text-slate-900">
+        <LiveEditable collection="products" docId={product.id} field="name">
+          {product.name}
+        </LiveEditable>
+      </h4>
+      <p className="text-slate-500 text-sm mb-4 font-dm line-clamp-2">
+        <LiveEditable collection="products" docId={product.id} field="shortDesc" multiline>
+          {product.shortDesc}
+        </LiveEditable>
+      </p>
       <div className="flex items-center justify-between border-t border-primary/10 pt-4">
-        <span className="text-xl font-bold text-slate-900">₹{product.price.toLocaleString()}</span>
+        <span className="text-xl font-bold text-slate-900">
+          ₹<LiveEditable collection="products" docId={product.id} field="price" inputType="number">
+            {product.price}
+          </LiveEditable>
+        </span>
         <button
-          className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push('/checkout');
-          }}
+          className={`text-xs font-bold uppercase tracking-widest flex items-center gap-1 transition-all duration-200 ${
+            added
+              ? 'text-green-600'
+              : adding
+              ? 'text-slate-400 cursor-not-allowed'
+              : 'text-primary hover:text-primary/70'
+          }`}
+          onClick={handleQuickAdd}
+          disabled={adding}
         >
-          Quick Add <span className="material-symbols-outlined text-sm">add</span>
+          {added ? (
+            <><span className="material-symbols-outlined text-sm">check</span> Added</>
+          ) : adding ? (
+            <>Adding...</>
+          ) : (
+            <>Quick Add <span className="material-symbols-outlined text-sm">add</span></>
+          )}
         </button>
       </div>
     </div>

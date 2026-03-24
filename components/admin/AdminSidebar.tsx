@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -10,38 +10,58 @@ const navItems = [
   { name: 'Orders', path: '/admin/orders', icon: 'shopping_cart' },
   { name: 'Customers', path: '/admin/customers', icon: 'group' },
   { name: 'Payments', path: '/admin/payments', icon: 'payments' },
+  { name: 'Inventory', path: '/admin/inventory', icon: 'storefront' },
   { name: 'Coupons', path: '/admin/coupons', icon: 'local_offer' },
+  { name: 'Bundles', path: '/admin/bundles', icon: 'inventory' },
   { name: 'Shipping', path: '/admin/shipping', icon: 'local_shipping' },
   { name: 'Reviews', path: '/admin/reviews', icon: 'reviews' },
   { name: 'Reports', path: '/admin/reports', icon: 'analytics' },
-  { name: 'Bundles', path: '/admin/bundles', icon: 'loyalty' },
+  { name: 'CMS Content', path: '/admin/cms', icon: 'edit_document' },
   { name: 'Federation', path: '/admin/federation', icon: 'forum' },
   { name: 'Partners', path: '/admin/partners', icon: 'handshake' },
+  { name: 'Roles', path: '/admin/roles', icon: 'manage_accounts' },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [adminName, setAdminName] = useState('Admin');
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const name = localStorage.getItem('jammi_admin_name');
+    if (name) setAdminName(name);
+  }, []);
+
+  const handleLogout = async () => {
+    const { supabase } = await import('../../lib/supabase');
+    await supabase.auth.signOut();
     localStorage.removeItem("jammi_admin_session");
+    localStorage.removeItem("jammi_admin_role");
+    localStorage.removeItem("jammi_admin_name");
+    localStorage.removeItem("jammi_cms_session");
+    sessionStorage.removeItem("jammi_admin_session");
+    
+    // Notify all components that session is cleared
+    window.dispatchEvent(new Event('jammi_cms_unlocked'));
+    
     router.push('/');
   };
 
   return (
-    <aside className="w-64 bg-slate-900 h-full flex flex-col shadow-xl flex-shrink-0 z-50">
-      <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-saffron tracking-wider select-none">JAMMI ADMIN</h2>
+    <aside className="w-60 bg-[#0a0a0f] h-full flex flex-col shadow-2xl flex-shrink-0 z-50 border-r border-[#22c55e]/20">
+      <div className="p-6 border-b border-[#22c55e]/10 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-[#22c55e] tracking-wider select-none" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>JAMMI ADMIN</h2>
       </div>
-      <nav className="flex-1 overflow-y-auto py-4">
+      <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-[#22c55e]/20 scrollbar-track-transparent">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            const isActive = pathname ? (pathname === item.path || pathname.startsWith(item.path + '/')) : false;
             return (
               <li key={item.path}>
                 <Link 
                   href={item.path}
-                  className={`flex items-center gap-3 px-6 py-2.5 transition-all outline-none ${isActive ? 'bg-saffron/10 text-saffron border-r-4 border-saffron font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                  className={`flex items-center gap-3 px-5 py-2.5 transition-all duration-200 outline-none ${isActive ? 'bg-[#22c55e]/10 text-[#22c55e] border-l-4 border-[#22c55e] font-semibold' : 'text-[#94a3b8] hover:bg-[#16161f] hover:text-[#f1f5f9]'}`}
+                  style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
                   <span className="text-sm font-medium">{item.name}</span>
@@ -51,13 +71,17 @@ export default function AdminSidebar() {
           })}
         </ul>
       </nav>
-      <div className="p-4 border-t border-slate-700/50">
+      <div className="p-4 border-t border-[#22c55e]/10">
+        <div className="mb-3 px-2">
+          <p className="text-[#94a3b8] text-xs font-medium">Logged in as</p>
+          <p className="text-[#f1f5f9] text-sm font-semibold truncate">{adminName}</p>
+        </div>
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 bg-slate-800 text-slate-300 hover:bg-red-600 hover:text-white px-4 py-2.5 rounded transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-[#111118] text-[#94a3b8] hover:bg-red-600 hover:text-white px-4 py-2.5 rounded-lg transition-all duration-200"
         >
           <span className="material-symbols-outlined text-[18px]">logout</span>
-          <span className="font-bold text-sm">Logout</span>
+          <span className="font-semibold text-sm">Logout</span>
         </button>
       </div>
     </aside>

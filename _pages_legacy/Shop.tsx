@@ -36,30 +36,34 @@ const Shop: React.FC = () => {
     };
 
     const fetchShopData = async () => {
-      // Fetch Products (limit 12 - 0 to 11, specific columns)
+      // Fetch Products (limit 20, specific columns)
+      // Using 'active' check and 'published' status
       const { data: prodData } = await supabase
         .from('products')
-        .select('id, name, category, description, shortDesc, basePrice, price, images, image, status, deleted')
-        .neq('deleted', true)
-        .neq('status', 'Draft')
+        .select(`
+          id, name, description, short_description, price, images, status, active,
+          categories(name)
+        `)
+        .eq('active', true)
+        .eq('status', 'published') // Aligning with DB constraint
         .order('created_at', { ascending: false })
-        .range(0, 11);
+        .limit(20);
 
       if (prodData) {
         currentProducts = prodData.map((prod: any) => ({
           id: prod.id,
           name: prod.name,
-          label: prod.category || 'Wellness',
-          shortDesc: prod.description ? prod.description.replace(/<[^>]+>/g, '') : (prod.shortDesc || 'Traditional formulation.'),
-          price: prod.basePrice || prod.price || 0,
-          image: prod.images?.[0] || prod.image || 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop',
-          category: prod.category || 'Wellness',
-          status: prod.status || 'Published'
+          label: prod.categories?.name || 'Wellness',
+          shortDesc: prod.short_description || (prod.description ? prod.description.replace(/<[^>]+>/g, '').substring(0, 100) : 'Traditional formulation.'),
+          price: prod.price || 0,
+          image: prod.images?.[0] || 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop',
+          category: prod.categories?.name || 'Wellness',
+          status: prod.status
         }));
       }
 
       // Fetch Categories
-      const { data: catData } = await supabase.from('categories').select('name');
+      const { data: catData } = await supabase.from('categories').select('name').eq('active', true).order('display_order');
       if (catData) {
         currentCategories = catData;
       }

@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MOCK_PRODUCTS } from '../constants';
+import LiveEditable from '../components/admin/LiveEditable';
 
 const ProductDetail: React.FC = () => {
-  const { id } = useParams();
+  const { id } = useParams() as { id: string };
   const router = useRouter();
   const product = MOCK_PRODUCTS.find(p => p.id === id) || MOCK_PRODUCTS[0];
   const [quantity, setQuantity] = useState(1);
@@ -33,13 +34,19 @@ const ProductDetail: React.FC = () => {
               <div className="space-y-8">
                 <div className="space-y-4">
                   <span className="inline-block px-4 py-1 rounded-full bg-primary/20 text-primary-light text-sm font-bold tracking-widest uppercase border border-primary/30">
-                    {product.banner.subtitle}
+                    <LiveEditable collection="products" docId={product.id} field="banner.subtitle">
+                      {product.banner.subtitle}
+                    </LiveEditable>
                   </span>
                   <h1 className="text-6xl lg:text-8xl font-serif font-black leading-tight">
-                    {product.banner.title.split(' ').slice(0, -1).join(' ')} <span className="text-primary italic">{product.banner.title.split(' ').slice(-1)}</span>
+                    <LiveEditable collection="products" docId={product.id} field="banner.title">
+                      {product.banner.title.split(' ').slice(0, -1).join(' ')} <span className="text-primary italic">{product.banner.title.split(' ').slice(-1)}</span>
+                    </LiveEditable>
                   </h1>
                   <p className="text-xl text-slate-300 max-w-xl font-dm leading-relaxed">
-                    {product.banner.desc}
+                    <LiveEditable collection="products" docId={product.id} field="banner.desc" multiline>
+                      {product.banner.desc}
+                    </LiveEditable>
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-8">
@@ -55,7 +62,7 @@ const ProductDetail: React.FC = () => {
                     onClick={handleAddToCart}
                     className="bg-primary text-white px-10 py-5 rounded-full font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-primary/20"
                   >
-                    Experience the Ritual
+                    <LiveEditable collection="content" docId="productTemplate" field="heroBtnLabel">Experience the Ritual</LiveEditable>
                   </button>
                 </div>
               </div>
@@ -83,17 +90,25 @@ const ProductDetail: React.FC = () => {
               <div className="flex flex-col gap-8">
                 <div className="space-y-4">
                   <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold tracking-widest uppercase">
-                    {product.label || 'Ancient Ayurvedic Wisdom'}
+                    {product.label || <LiveEditable collection="content" docId="productTemplate" field="defaultBadgeLabel">Ancient Ayurvedic Wisdom</LiveEditable>}
                   </span>
                   <h2 className="text-5xl lg:text-7xl font-serif font-black text-slate-900 leading-[1.1]">
-                    {product.name.split(' ').slice(0, -1).join(' ')} <span className="text-primary">{product.name.split(' ').slice(-1)}</span>
+                    <LiveEditable collection="products" docId={product.id} field="name">
+                      {product.name.split(' ').slice(0, -1).join(' ')} <span className="text-primary">{product.name.split(' ').slice(-1)}</span>
+                    </LiveEditable>
                   </h2>
                   <p className="text-lg text-slate-600 leading-relaxed max-w-xl font-dm">
-                    {product.shortDesc}
+                    <LiveEditable collection="products" docId={product.id} field="shortDesc" multiline>
+                      {product.shortDesc}
+                    </LiveEditable>
                   </p>
                 </div>
                 <div className="flex items-baseline gap-4">
-                  <span className="text-4xl font-bold text-primary">₹{product.price.toLocaleString()}</span>
+                  <span className="text-4xl font-bold text-primary">
+                    ₹<LiveEditable collection="products" docId={product.id} field="price" inputType="number">
+                      {product.price}
+                    </LiveEditable>
+                  </span>
                   {product.originalPrice && (
                     <span className="text-slate-400 line-through text-xl">₹{product.originalPrice.toLocaleString()}</span>
                   )}
@@ -119,7 +134,7 @@ const ProductDetail: React.FC = () => {
                     onClick={handleAddToCart}
                   >
                     <span className="material-symbols-outlined">shopping_bag</span>
-                    Add to Cart Ritual
+                    <LiveEditable collection="content" docId="productTemplate" field="addToCartTitle">Add to Cart Ritual</LiveEditable>
                   </button>
                 </div>
               </div>
@@ -137,8 +152,16 @@ const ProductDetail: React.FC = () => {
                     <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500">
                       <span className="material-symbols-outlined text-4xl">{feature.icon}</span>
                     </div>
-                    <h4 className="text-2xl font-serif font-bold">{feature.title}</h4>
-                    <p className="text-slate-500 font-dm leading-relaxed">{feature.desc}</p>
+                    <h4 className="text-2xl font-serif font-bold">
+                       <LiveEditable collection="products" docId={product.id} field={`features[${idx}].title`}>
+                         {feature.title}
+                       </LiveEditable>
+                    </h4>
+                    <p className="text-slate-500 font-dm leading-relaxed">
+                       <LiveEditable collection="products" docId={product.id} field={`features[${idx}].desc`} multiline>
+                         {feature.desc}
+                       </LiveEditable>
+                    </p>
                   </div>
                 ))}
               </div>
@@ -152,9 +175,9 @@ const ProductDetail: React.FC = () => {
             <div className="absolute inset-0 opacity-5 pointer-events-none paper-grain"></div>
             <div className="max-w-7xl mx-auto px-6 relative z-10">
               <div className="text-center mb-16 space-y-4">
-                <h3 className="text-4xl font-serif font-bold">Key Botanicals</h3>
+                <h3 className="text-4xl font-serif font-bold"><LiveEditable collection="content" docId="productTemplate" field="botanicalsTitle">Key Botanicals</LiveEditable></h3>
                 <div className="w-24 h-1 bg-primary mx-auto rounded-full"></div>
-                <p className="text-slate-600 font-dm">Pure ingredients sourced from the heart of tradition.</p>
+                <p className="text-slate-600 font-dm"><LiveEditable collection="content" docId="productTemplate" field="botanicalsSubtitle">Pure ingredients sourced from the heart of tradition.</LiveEditable></p>
               </div>
               <div className="grid md:grid-cols-2 gap-8">
                 {product.botanicals.map((botanical, idx) => (
@@ -165,9 +188,15 @@ const ProductDetail: React.FC = () => {
                       src={botanical.image}
                     />
                     <div className="space-y-3">
-                      <h4 className="text-2xl font-serif font-bold text-primary italic">{botanical.name}</h4>
+                      <h4 className="text-2xl font-serif font-bold text-primary italic">
+                        <LiveEditable collection="products" docId={product.id} field={`botanicals[${idx}].name`}>
+                          {botanical.name}
+                        </LiveEditable>
+                      </h4>
                       <p className="text-slate-600 leading-relaxed font-dm">
-                        {botanical.desc}
+                        <LiveEditable collection="products" docId={product.id} field={`botanicals[${idx}].desc`} multiline>
+                          {botanical.desc}
+                        </LiveEditable>
                       </p>
                     </div>
                   </div>
@@ -183,7 +212,7 @@ const ProductDetail: React.FC = () => {
             <div className="flex flex-col lg:flex-row gap-16 items-center">
               <div className="lg:w-1/2 space-y-6">
                 <h3 className="text-4xl font-serif font-bold leading-tight">The {product.name.split(' ').slice(-1)} Ritual</h3>
-                <p className="text-lg text-slate-600 font-dm">Elevate your daily care into a moment of transcendence. Follow our Vedic process for maximum efficacy.</p>
+                <p className="text-lg text-slate-600 font-dm"><LiveEditable collection="content" docId="productTemplate" multiline field="ritualDesc">Elevate your daily care into a moment of transcendence. Follow our Vedic process for maximum efficacy.</LiveEditable></p>
                 <div className="space-y-8 mt-12">
                   {product.ritual.map((step, idx) => (
                     <div key={idx} className="flex gap-6 items-start">
@@ -191,8 +220,16 @@ const ProductDetail: React.FC = () => {
                         {idx + 1}
                       </div>
                       <div>
-                        <h5 className="text-xl font-bold mb-1">{step.title}</h5>
-                        <p className="text-slate-600 italic font-dm">{step.desc}</p>
+                        <h5 className="text-xl font-bold mb-1">
+                          <LiveEditable collection="products" docId={product.id} field={`ritual[${idx}].title`}>
+                            {step.title}
+                          </LiveEditable>
+                        </h5>
+                        <p className="text-slate-600 italic font-dm">
+                          <LiveEditable collection="products" docId={product.id} field={`ritual[${idx}].desc`} multiline>
+                            {step.desc}
+                          </LiveEditable>
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -217,15 +254,29 @@ const ProductDetail: React.FC = () => {
               <div className="grid md:grid-cols-3 gap-12 text-center">
                 {product.results.map((result, idx) => (
                   <div key={idx} className="space-y-4 p-8 border border-white/10 rounded-2xl bg-white/5 backdrop-blur-sm">
-                    <div className="text-5xl font-serif font-black text-primary italic">{result.percentage}</div>
-                    <p className="text-xl font-medium font-dm">{result.text}</p>
+                    <div className="text-5xl font-serif font-black text-primary italic">
+                      <LiveEditable collection="products" docId={product.id} field={`results[${idx}].percentage`}>
+                        {result.percentage}
+                      </LiveEditable>
+                    </div>
+                    <p className="text-xl font-medium font-dm">
+                      <LiveEditable collection="products" docId={product.id} field={`results[${idx}].text`}>
+                        {result.text}
+                      </LiveEditable>
+                    </p>
                   </div>
                 ))}
               </div>
               {product.quote && (
                 <div className="mt-20 max-w-3xl mx-auto text-center italic text-2xl font-serif font-light leading-relaxed text-slate-300">
-                  "{product.quote.text}"
-                  <div className="mt-6 not-italic text-sm font-bold uppercase tracking-widest text-primary">— {product.quote.author}</div>
+                  "<LiveEditable collection="products" docId={product.id} field="quote.text" multiline>
+                    {product.quote.text}
+                  </LiveEditable>"
+                  <div className="mt-6 not-italic text-sm font-bold uppercase tracking-widest text-primary">— 
+                    <LiveEditable collection="products" docId={product.id} field="quote.author">
+                      {product.quote.author}
+                    </LiveEditable>
+                  </div>
                 </div>
               )}
             </div>

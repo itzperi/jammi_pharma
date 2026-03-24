@@ -1,3 +1,33 @@
+-- ─────────────────────────────────────────
+-- CORE TABLES (Idempotent)
+-- ─────────────────────────────────────────
+
+-- Ensure columns exist for RLS policies
+DO $$ 
+BEGIN
+    BEGIN
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS active boolean default true;
+    EXCEPTION WHEN undefined_table THEN
+        NULL;
+    END;
+    BEGIN
+        ALTER TABLE categories ADD COLUMN IF NOT EXISTS active boolean default true;
+    EXCEPTION WHEN undefined_table THEN
+        NULL;
+    END;
+    BEGIN
+        ALTER TABLE bundles ADD COLUMN IF NOT EXISTS active boolean default true;
+    EXCEPTION WHEN undefined_table THEN
+        NULL;
+    END;
+    BEGIN
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS active boolean default true;
+    EXCEPTION WHEN undefined_table THEN
+        NULL;
+    END;
+END $$;
+
+-- Table Definitions
 create table if not exists products (
   id uuid default gen_random_uuid() primary key,
   name text not null,
@@ -111,6 +141,7 @@ create table if not exists site_content (
   updated_at timestamptz default now()
 );
 
+-- RLS Configuration
 alter table products enable row level security;
 alter table categories enable row level security;
 alter table orders enable row level security;
@@ -121,27 +152,57 @@ alter table payments enable row level security;
 alter table bundles enable row level security;
 alter table site_content enable row level security;
 
-create policy "public read products" on products for select using (active = true);
-create policy "auth all products" on products for all using (auth.role() = 'authenticated');
-create policy "public read categories" on categories for select using (true);
-create policy "auth all categories" on categories for all using (auth.role() = 'authenticated');
-create policy "public read bundles" on bundles for select using (active = true);
-create policy "auth all bundles" on bundles for all using (auth.role() = 'authenticated');
-create policy "public read approved reviews" on reviews for select using (status = 'approved');
-create policy "anyone insert review" on reviews for insert with check (true);
-create policy "auth all reviews" on reviews for all using (auth.role() = 'authenticated');
-create policy "anyone insert order" on orders for insert with check (true);
-create policy "auth all orders" on orders for all using (auth.role() = 'authenticated');
-create policy "auth all customers" on customers for all using (auth.role() = 'authenticated');
-create policy "auth all payments" on payments for all using (auth.role() = 'authenticated');
-create policy "public read coupons" on coupons for select using (active = true);
-create policy "auth all coupons" on coupons for all using (auth.role() = 'authenticated');
-create policy "public read site content" on site_content for select using (true);
-create policy "auth all site content" on site_content for all using (auth.role() = 'authenticated');
-
-alter publication supabase_realtime add table products;
-alter publication supabase_realtime add table orders;
-alter publication supabase_realtime add table reviews;
-alter publication supabase_realtime add table payments;
-alter publication supabase_realtime add table site_content;
-alter publication supabase_realtime add table bundles;
+-- Policies (Idempotent)
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'products' and policyname = 'public read products') then
+    create policy "public read products" on products for select using (active = true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'products' and policyname = 'auth all products') then
+    create policy "auth all products" on products for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'categories' and policyname = 'public read categories') then
+    create policy "public read categories" on categories for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'categories' and policyname = 'auth all categories') then
+    create policy "auth all categories" on categories for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'bundles' and policyname = 'public read bundles') then
+    create policy "public read bundles" on bundles for select using (active = true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'bundles' and policyname = 'auth all bundles') then
+    create policy "auth all bundles" on bundles for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'reviews' and policyname = 'public read approved reviews') then
+    create policy "public read approved reviews" on reviews for select using (status = 'approved');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'reviews' and policyname = 'anyone insert review') then
+    create policy "anyone insert review" on reviews for insert with check (true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'reviews' and policyname = 'auth all reviews') then
+    create policy "auth all reviews" on reviews for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'orders' and policyname = 'anyone insert order') then
+    create policy "anyone insert order" on orders for insert with check (true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'orders' and policyname = 'auth all orders') then
+    create policy "auth all orders" on orders for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'customers' and policyname = 'auth all customers') then
+    create policy "auth all customers" on customers for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'payments' and policyname = 'auth all payments') then
+    create policy "auth all payments" on payments for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'coupons' and policyname = 'public read coupons') then
+    create policy "public read coupons" on coupons for select using (active = true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'coupons' and policyname = 'auth all coupons') then
+    create policy "auth all coupons" on coupons for all using (auth.role() = 'authenticated');
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'site_content' and policyname = 'public read site content') then
+    create policy "public read site content" on site_content for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'site_content' and policyname = 'auth all site content') then
+    create policy "auth all site content" on site_content for all using (auth.role() = 'authenticated');
+  end if;
+end $$;

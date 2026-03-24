@@ -27,37 +27,39 @@ const Heritage: React.FC = () => {
   return (
     <div className="bg-background-light text-secondary transition-colors duration-300 font-body">
       {/* Hero Section */}
-      <section className="relative w-full min-h-[600px] flex items-center justify-center bg-background-light overflow-hidden pt-20">
-        <EditorImage
-            src={content?.heroBg || 'https://images.unsplash.com/photo-1590422744728-64c861219159?q=80&w=2670&auto=format&fit=crop'}
-            alt="Hero Background"
-            className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-multiply"
-            bucket="site-assets"
-            folder="heritage"
-            editorActive={editorActive}
-            onUpdate={(url) => updateDocument('site_content', 'heritage', { heroBg: url })}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background-light via-background-light/60 to-transparent"></div>
-        <div className="relative z-10 text-center px-4 max-w-4xl">
-          <p className="text-primary font-bold tracking-widest uppercase text-sm mb-4">
-            <LiveEditable collection="site_content" docId="heritage" field="heroEst">Est. 1890</LiveEditable>
-          </p>
-          <h1 className="font-display text-6xl md:text-8xl text-black leading-tight mb-6 font-extrabold">
+      <section className="relative w-full min-h-[70vh] flex items-center justify-center bg-[#fcfbf7] overflow-hidden pt-32 pb-24">
+        {/* Subtle Decorative Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-primary/5 rounded-full blur-3xl opacity-50 -translate-y-1/2"></div>
+        <div className="absolute inset-0 paper-grain opacity-5 pointer-events-none"></div>
+
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/5 border border-primary/10 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <span className="size-1.5 rounded-full bg-primary animate-pulse"></span>
+             <span className="text-primary font-black tracking-[0.2em] uppercase text-[10px]">
+                <LiveEditable collection="site_content" docId="heritage" field="heroEst">Est. 1890</LiveEditable>
+             </span>
+          </div>
+
+          <h1 className="font-display text-5xl md:text-8xl text-secondary leading-[1.05] mb-10 font-black tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
             <LiveEditable collection="site_content" docId="heritage" field="heroHeadline">{heroHeadline}</LiveEditable>
           </h1>
-          <p className="text-lg md:text-xl text-slate-100 max-w-3xl mx-auto leading-relaxed">
+
+          <p className="text-xl md:text-2xl text-slate-600/80 max-w-2xl mx-auto leading-relaxed font-serif italic animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <LiveEditable collection="site_content" docId="heritage" field="heroSubtext" multiline>{heroSubtext}</LiveEditable>
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-            <a href="#milestones" className="inline-block bg-secondary text-white px-8 py-4 rounded-full font-bold hover:bg-black transition-all shadow-lg hover:-translate-y-1">
+
+          <div className="mt-16 flex flex-col sm:flex-row justify-center gap-6 w-full sm:w-auto px-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+            <a href="#milestones" className="inline-block bg-secondary text-white px-12 py-5 rounded-full font-black uppercase tracking-widest text-xs hover:bg-forest transition-all shadow-2xl shadow-secondary/20 hover:-translate-y-1 active:scale-95">
               <LiveEditable collection="site_content" docId="heritage" field="heroBtn1">Explore Our Journey</LiveEditable>
             </a>
-            <button className="border-2 border-secondary text-secondary px-8 py-4 rounded-full font-bold hover:bg-secondary hover:text-white transition-all">
-              <LiveEditable collection="site_content" docId="heritage" field="heroBtn2">View Archival Gallery</LiveEditable>
+            <button className="group relative px-12 py-5 rounded-full font-black uppercase tracking-widest text-xs text-secondary overflow-hidden transition-all active:scale-95">
+               <div className="absolute inset-0 border-2 border-secondary/10 rounded-full group-hover:border-secondary transition-colors"></div>
+               <span className="relative z-10"><LiveEditable collection="site_content" docId="heritage" field="heroBtn2">View Archival Gallery</LiveEditable></span>
             </button>
           </div>
         </div>
       </section>
+
 
       {/* The Founder Section */}
       <section className="py-24 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -68,10 +70,7 @@ const Heritage: React.FC = () => {
                src={content?.founderImage || "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=2670&auto=format&fit=crop"}
                alt="Dr. Jammi Venkataramanayya"
                className="w-full h-full object-cover"
-               bucket="site-assets"
-               folder="heritage"
-               editorActive={editorActive}
-               onUpdate={(url) => updateDocument('site_content', 'heritage', { founderImage: url })}
+               cmsKey={{ page: 'heritage', section: 'founder', content_key: 'founderImage' }}
              />
           </div>
           <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-white">
@@ -178,10 +177,7 @@ const Heritage: React.FC = () => {
                 src={content?.galleryImg1 || "https://images.unsplash.com/photo-1579308638162-8e12470762cb?q=80&w=2670&auto=format&fit=crop"}
                 alt="Sacred Manuscripts"
                 className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                bucket="site-assets"
-                folder="heritage"
-                editorActive={editorActive}
-                onUpdate={(url) => updateDocument('site_content', 'heritage', { galleryImg1: url })}
+                cmsKey={{ page: 'heritage', section: 'gallery', content_key: 'galleryImg1' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                 <p className="text-primary text-xs font-bold uppercase tracking-widest mb-1 pointer-events-auto">
@@ -200,10 +196,7 @@ const Heritage: React.FC = () => {
                 src={content?.galleryImg2 || "https://images.unsplash.com/photo-1631557088921-665aa0808cf7?q=80&w=2670&auto=format&fit=crop"}
                 alt="Vintage Tincture Bottles"
                 className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                bucket="site-assets"
-                folder="heritage"
-                editorActive={editorActive}
-                onUpdate={(url) => updateDocument('site_content', 'heritage', { galleryImg2: url })}
+                cmsKey={{ page: 'heritage', section: 'gallery', content_key: 'galleryImg2' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                 <p className="text-primary text-xs font-bold uppercase tracking-widest mb-1 pointer-events-auto">
@@ -222,10 +215,7 @@ const Heritage: React.FC = () => {
                 src={content?.galleryImg3 || "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=2670&auto=format&fit=crop"}
                 alt="First Laboratory"
                 className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                bucket="site-assets"
-                folder="heritage"
-                editorActive={editorActive}
-                onUpdate={(url) => updateDocument('site_content', 'heritage', { galleryImg3: url })}
+                cmsKey={{ page: 'heritage', section: 'gallery', content_key: 'galleryImg3' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                 <p className="text-primary text-xs font-bold uppercase tracking-widest mb-1 pointer-events-auto">

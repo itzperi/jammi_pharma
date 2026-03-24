@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../hooks/useCart';
 import { useFederationStore } from '../store/federationStore';
+import LiveEditable from '../components/admin/LiveEditable';
+import { useCMSContent } from '../hooks/useCMSContent';
 
 function CartSkeleton() {
   return (
@@ -23,7 +25,22 @@ function CartSkeleton() {
 }
 
 const Checkout: React.FC = () => {
-  const { items: cartItems, totalItems, subtotal, increaseQty, decreaseQty, removeFromCart, clearCart, addToCart, loading: cartLoading, guestId } = useCart();
+  const { content } = useCMSContent('checkout');
+  const { cartItems: hookCartItems, totalItems, subtotal, updateQuantity, removeFromCart, clearCart, addToCart, increaseQty, decreaseQty } = useCart();
+  
+  // CMS Helper
+  const CMS = ({ section = 'general', field, fallback, multiline, inputType }: any) => (
+    <LiveEditable 
+        cmsKey={{ page: 'checkout', section, content_key: field }}
+        multiline={multiline}
+        inputType={inputType}
+    >
+        {content?.[section]?.[field] || fallback}
+    </LiveEditable>
+  );
+  const cartItems = hookCartItems || [];
+  const loading = false; // Add a fallback for loading if needed, or remove usage if not provided by context
+  const guestId = ''; // Add a fallback for guestId if needed
   const { products } = useFederationStore();
 
   const [isPlacing, setIsPlacing] = useState(false);
@@ -130,7 +147,7 @@ const Checkout: React.FC = () => {
   const total = Math.max(0, subtotal - totalDiscount);
 
   const handleAddBundleProduct = async (product: any) => {
-    await addToCart(product.id, 1);
+    await addToCart({ ...product, id: product.id, product_id: product.id });
   };
 
   const handleRemoveItem = async (productId: string) => {
@@ -249,15 +266,15 @@ const Checkout: React.FC = () => {
         <div className="size-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
           <span className="material-symbols-outlined text-4xl">check_circle</span>
         </div>
-        <h2 className="text-3xl font-bold serif mb-4 text-forest">Order Confirmed!</h2>
+        <h2 className="text-3xl font-bold serif mb-4 text-forest"><LiveEditable collection="content" docId="checkout" field="confirmTitle">Order Confirmed!</LiveEditable></h2>
         <p className="text-lg text-slate-600 mb-8">
-          Thank you for your order. Your order ID is <span className="font-bold text-primary">{orderNumber}</span>.
+          <LiveEditable collection="content" docId="checkout" field="confirmText" multiline>Thank you for your order. Your order ID is</LiveEditable> <span className="font-bold text-primary">{orderNumber}</span>.
         </p>
         <button
           onClick={() => window.location.href = '/'}
           className="bg-primary hover:bg-[#c07a28] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
         >
-          Return to Home
+          <LiveEditable collection="content" docId="checkout" field="returnHomeBtn">Return to Home</LiveEditable>
         </button>
       </div>
     );
@@ -265,10 +282,10 @@ const Checkout: React.FC = () => {
 
   return (
     <div className="max-w-[1200px] mx-auto px-6 py-12 mt-10">
-      <div className="flex flex-wrap gap-2 py-2 mb-8 text-primary text-sm font-medium">
-        <span>Cart</span>
+      <div className="flex flex-wrap gap-2 py-2 mb-8 text-primary text-sm font-medium uppercase tracking-widest">
+        <span><LiveEditable collection="content" docId="checkout" field="breadcrumbCart">Cart</LiveEditable></span>
         <span className="text-cream-dark">/</span>
-        <span className="text-forest">Checkout</span>
+        <span className="text-forest"><LiveEditable collection="content" docId="checkout" field="breadcrumbCheckout">Checkout</LiveEditable></span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -276,28 +293,49 @@ const Checkout: React.FC = () => {
           <section className="bg-white p-6 rounded-2xl border border-cream-dark shadow-sm">
             <div className="flex items-center gap-2 mb-6 text-forest">
               <span className="material-symbols-outlined text-primary">home_pin</span>
-              <h2 className="text-2xl font-bold serif">Delivery Address</h2>
+              <h2 className="text-2xl font-bold serif"><LiveEditable collection="content" docId="checkout" field="deliveryTitle">Delivery Address</LiveEditable></h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                  <CMS section="form" field="labelFirstName" fallback="First Name *" />
+                </label>
                 <input name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="First Name *" />
               </div>
               <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                   <CMS section="form" field="labelLastName" fallback="Last Name" />
+                </label>
                 <input name="lastName" value={formData.lastName} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="Last Name" />
               </div>
               <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                   <CMS section="form" field="labelEmail" fallback="Email Address *" />
+                </label>
                 <input name="email" type="email" value={formData.email} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="Email Address *" />
               </div>
               <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                   <CMS section="form" field="labelPhone" fallback="Phone Number" />
+                </label>
                 <input name="phone" value={formData.phone} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="Phone Number" />
               </div>
               <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                   <CMS section="form" field="labelAddress" fallback="Address line 1 *" />
+                </label>
                 <input name="address" value={formData.address} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="Address line 1 *" />
               </div>
               <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                   <CMS section="form" field="labelCity" fallback="Town / City" />
+                </label>
                 <input name="city" value={formData.city} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="Town / City" />
               </div>
               <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                   <CMS section="form" field="labelPincode" fallback="Pincode" />
+                </label>
                 <input name="pincode" value={formData.pincode} onChange={handleInputChange} className="w-full rounded-xl border border-cream-dark focus:ring-2 focus:ring-primary/20 focus:border-primary h-12 px-4 transition-all" placeholder="Pincode" />
               </div>
             </div>
@@ -307,7 +345,7 @@ const Checkout: React.FC = () => {
             <div className="flex items-center justify-between mb-6 text-forest">
               <div className="flex items-center gap-2 font-bold serif text-2xl">
                 <span className="material-symbols-outlined text-primary">account_balance_wallet</span>
-                Payment Method
+                <LiveEditable collection="content" docId="checkout" field="paymentTitle">Payment Method</LiveEditable>
               </div>
             </div>
             <div className="space-y-4">
@@ -326,13 +364,11 @@ const Checkout: React.FC = () => {
         <div className="lg:col-span-4">
           <div className="sticky top-24 space-y-6">
             <div className="bg-white p-6 rounded-2xl border border-cream-dark shadow-sm">
-              <h3 className="text-xl font-bold serif mb-6 border-b border-cream-dark pb-4 text-forest">Order Summary</h3>
+              <h3 className="text-xl font-bold serif mb-6 border-b border-cream-dark pb-4 text-forest"><LiveEditable collection="content" docId="checkout" field="orderSummaryTitle">Order Summary</LiveEditable></h3>
 
               <div className="space-y-5 mb-6">
-                {cartLoading ? (
-                  <CartSkeleton />
-                ) : cartItems.length === 0 ? (
-                  <p className="text-center text-slate-500 py-4">Your cart is empty.</p>
+                {cartItems.length === 0 ? (
+                  <p className="text-center text-slate-500 py-4"><LiveEditable collection="content" docId="checkout" field="emptyCart">Your cart is empty.</LiveEditable></p>
                 ) : (
                   cartItems.map((item) => {
                     const isPartInBundle = usedProductIds.has(item.product_id);
@@ -348,11 +384,11 @@ const Checkout: React.FC = () => {
                         <div className="flex-1 py-1">
                           <p className="text-sm font-bold leading-tight text-slate-800 line-clamp-2 pr-6">{item.product?.name}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <button onClick={() => decreaseQty(item.product_id)} className="text-slate-500 hover:text-primary">
+                            <button onClick={() => decreaseQty(item.product_id || item.id, item.variant_id)} className="text-slate-500 hover:text-primary">
                               <span className="material-symbols-outlined text-[14px]">remove</span>
                             </button>
                             <p className="text-xs text-slate-500 font-bold">Qty: {item.quantity}</p>
-                            <button onClick={() => increaseQty(item.product_id)} className="text-slate-500 hover:text-primary">
+                            <button onClick={() => increaseQty(item.product_id || item.id, item.variant_id)} className="text-slate-500 hover:text-primary">
                               <span className="material-symbols-outlined text-[14px]">add</span>
                             </button>
                           </div>
@@ -378,7 +414,7 @@ const Checkout: React.FC = () => {
 
               <div className="space-y-3 pt-5 border-t border-cream-dark">
                 <div className="flex justify-between text-slate-600 text-sm">
-                  <span>Subtotal</span>
+                  <span><LiveEditable collection="content" docId="checkout" field="labelSubtotal">Subtotal</LiveEditable></span>
                   <span className="font-medium">₹{subtotal}</span>
                 </div>
 
@@ -397,14 +433,14 @@ const Checkout: React.FC = () => {
                 )}
 
                 <div className="flex justify-between text-xl font-bold pt-3 border-t border-slate-100 mt-3 text-forest">
-                  <span>Total</span>
+                  <span><LiveEditable collection="content" docId="checkout" field="labelTotal">Total</LiveEditable></span>
                   <span className="text-primary">₹{total}</span>
                 </div>
               </div>
 
               {/* Promo Code Section */}
               <div className="mt-6 pt-6 border-t border-cream-dark">
-                <h4 className="text-sm font-bold serif mb-3 text-forest">Apply Promo Code</h4>
+                <h4 className="text-sm font-bold serif mb-3 text-forest"><LiveEditable collection="content" docId="checkout" field="promoTitle">Apply Promo Code</LiveEditable></h4>
                 {appliedCoupon ? (
                   <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3.5 rounded-xl">
                     <div className="flex items-center gap-2 text-green-700">
@@ -436,7 +472,7 @@ const Checkout: React.FC = () => {
                         disabled={!couponCode.trim()}
                         className="bg-slate-900 hover:bg-black disabled:bg-slate-300 text-white px-5 rounded-xl text-sm font-bold transition-colors"
                       >
-                        Apply
+                        <CMS section="summary" field="applyPromoBtn" fallback="Apply" />
                       </button>
                     </div>
                     {couponError && (
@@ -459,7 +495,7 @@ const Checkout: React.FC = () => {
                 ) : (
                   <span className="material-symbols-outlined">lock</span>
                 )}
-                {isPlacing ? 'Placing Order...' : 'Place Order Securely'}
+                {isPlacing ? 'Placing Order...' : <LiveEditable collection="content" docId="checkout" field="placeOrderBtn">Place Order Securely</LiveEditable>}
               </button>
             </div>
 
@@ -468,10 +504,12 @@ const Checkout: React.FC = () => {
               <div className="bg-gradient-to-br from-[#FFFDF8] to-[#FDF4E7] p-6 rounded-2xl border border-primary/20 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
-                  <h3 className="text-lg font-bold serif text-forest">Complete the Bundle</h3>
+                  <h3 className="text-lg font-bold serif text-forest">
+                    <LiveEditable collection="content" docId="checkout" field="bundleTitle">Complete the Bundle</LiveEditable>
+                  </h3>
                 </div>
                 <p className="text-sm text-slate-600 mb-5 leading-snug">
-                  Add these items to unlock your <span className="font-bold text-primary">{suggestedBundleProducts[0].discountPercentage}%</span> combo discount instantly!
+                  <LiveEditable collection="content" docId="checkout" field="bundleDesc" multiline>Add these items to unlock your combo discount instantly!</LiveEditable>
                 </p>
 
                 <div className="space-y-4">
@@ -488,7 +526,9 @@ const Checkout: React.FC = () => {
                         <p className="text-sm font-bold text-slate-800 line-clamp-2 pr-2">{product.name}</p>
                         <div className="flex items-center gap-2 mt-1.5">
                           <span className="text-sm font-bold text-primary">₹{product.price}</span>
-                          <span className="text-[10px] text-primary/70 bg-primary/10 px-1.5 rounded font-bold">Recommended</span>
+                          <span className="text-[10px] text-primary/70 bg-primary/10 px-1.5 rounded font-bold uppercase">
+                            <CMS section="summary" field="recommendedPill" fallback="Recommended" />
+                          </span>
                         </div>
                       </div>
                       <button

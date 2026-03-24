@@ -1,8 +1,17 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { uploadFile, validateFile } from '../lib/storage';
-import type { Bucket } from '../lib/storage';
+import { useAdminSave } from '@/hooks/useAdminSave';
+import { useToast } from '@/components/Toast';
+
+// Basic file validation since we removed lib/storage
+function validateFile(file: File) {
+  if (file.size > 5 * 1024 * 1024) return { valid: false, error: 'File too large (max 5MB)' };
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) return { valid: false, error: 'Invalid file type' };
+  return { valid: true };
+}
+
+type Bucket = 'cms-images' | 'product-images' | 'site-assets' | string;
 
 interface ImageUploaderProps {
   bucket: Bucket;
@@ -28,6 +37,9 @@ export default function ImageUploader({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string>(currentUrl || '');
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const { uploadImage } = useAdminSave();
+  const { addToast } = useToast();
 
   async function handleFiles(files: FileList) {
     if (!files.length) return;
@@ -38,27 +50,48 @@ export default function ImageUploader({
         const fileArray = Array.from(files);
         for (const file of fileArray) {
           const validation = validateFile(file);
-          if (!validation.valid) { onError?.(validation.error!); return; }
+          if (!validation.valid) { 
+            onError?.(validation.error!); 
+            addToast(validation.error!, 'error');
+            setUploading(false);
+            return; 
+          }
         }
+        
         const urls = await Promise.all(
-          fileArray.map(f => uploadFile(f, bucket, folder))
+          fileArray.map(async (f) => {
+            const url = await uploadImage(f, bucket, folder);
+            if (!url) throw new Error('Failed to upload one of the images');
+            return url;
+          })
         );
-        onUploadMultiple(urls);
+        onUploadMultiple(urls as string[]);
+        addToast('Images uploaded successfully', 'success');
       } else {
         const file = files[0];
         const validation = validateFile(file);
-        if (!validation.valid) { onError?.(validation.error!); return; }
+        if (!validation.valid) { 
+          onError?.(validation.error!); 
+          addToast(validation.error!, 'error');
+          setUploading(false);
+          return; 
+        }
 
         // Show local preview immediately for snappy UX
         setPreview(URL.createObjectURL(file));
 
-        // Upload to Supabase Storage
-        const url = await uploadFile(file, bucket, folder);
-        setPreview(url);
-        onUpload(url);
+        // Upload to Supabase Storage via our secure admin route
+        const url = await uploadImage(file, bucket, folder);
+        if (url) {
+          setPreview(url);
+          onUpload(url);
+        } else {
+          throw new Error('Upload failed');
+        }
       }
     } catch (err: any) {
       onError?.(err.message || 'Upload failed');
+      addToast(err.message || 'Upload failed', 'error');
       setPreview(currentUrl || ''); // revert preview on error
     } finally {
       setUploading(false);

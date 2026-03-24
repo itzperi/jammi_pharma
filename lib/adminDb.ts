@@ -79,9 +79,41 @@ export const createDocument = async (collectionName: string, data: any) => {
     return insertedData?.id;
 };
 
+import set from 'lodash/set';
+
 export const updateDocument = async (collectionName: string, id: string, data: any) => {
+    // Check if we are doing a nested update (keys contain dots or brackets)
+    const hasNested = Object.keys(data).some(key => key.includes('.') || key.includes('['));
+
+    let finalData = { ...data };
+
+    if (hasNested) {
+        // Fetch current document to perform a partial JSONB update
+        const { data: existing, error: fetchError } = await supabase
+            .from(collectionName)
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) throw new Error(`Fetch for update failed: ${fetchError.message}`);
+
+        const updatedDoc = { ...existing };
+        Object.entries(data).forEach(([path, value]) => {
+            set(updatedDoc, path, value);
+        });
+
+        // We only want to send the columns that were actually hit by the nested update 
+        // OR we can just send the whole updated doc. For reliability with RLS and speed, 
+        // let's identify the top-level keys that changed.
+        const topLevelKeys = new Set(Object.keys(data).map(path => path.split(/[.[]/)[0]));
+        finalData = {};
+        topLevelKeys.forEach(key => {
+            finalData[key] = updatedDoc[key];
+        });
+    }
+
     const { error } = await supabase.from(collectionName).update({
-        ...data,
+        ...finalData,
         updatedAt: new Date().toISOString()
     }).eq('id', id);
     

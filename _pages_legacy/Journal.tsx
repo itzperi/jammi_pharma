@@ -1,6 +1,11 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchCollection } from '../lib/adminDb';
+import { fetchCollection, updateDocument } from '../lib/adminDb';
+import LiveEditable from '../components/admin/LiveEditable';
+import EditorImage from '../components/EditorImage';
+import { useAdmin } from '../components/admin/AdminContext';
+import { useCMSContent } from '../hooks/useCMSContent';
+import { cmsApi } from '../lib/adminApi';
 
 interface BlogPost {
   id: string;
@@ -13,8 +18,46 @@ interface BlogPost {
 }
 
 export default function Journal() {
+  const { content, loading: cmsLoading } = useCMSContent('journal');
+  const { isEditMode, isAdmin } = useAdmin();
+  const editorActive = isEditMode && isAdmin;
+
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // CMS Helper
+  const CMS = ({ section = 'general', field, fallback, multiline, inputType }: any) => (
+    <LiveEditable 
+        cmsKey={{ page: 'journal', section, content_key: field }}
+        multiline={multiline}
+        inputType={inputType}
+    >
+        {content?.[section]?.[field] || fallback}
+    </LiveEditable>
+  );
+
+  const CMSImage = ({ section = 'general', field, fallback, className }: any) => (
+    <EditorImage
+        src={content?.[section]?.[field] || fallback}
+        alt={field}
+        className={className}
+        bucket="cms-images"
+        folder="journal"
+        editorActive={editorActive}
+        onUpdate={async (url) => {
+            try {
+                await cmsApi.saveContent([{
+                    page: 'journal',
+                    section,
+                    content_key: field,
+                    content_value: url
+                }]);
+            } catch (err) {
+                console.error("Failed to save image URL to CMS:", err);
+            }
+        }}
+    />
+  );
 
   useEffect(() => {
     async function loadBlogs() {
@@ -47,22 +90,23 @@ export default function Journal() {
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="md:w-1/2 space-y-6">
             <div className="inline-block px-4 py-1.5 rounded-full bg-forest/5 text-forest font-bold text-xs uppercase tracking-widest border border-forest/10">
-              The Jammi Journal
+              <CMS section="hero" field="heroBadge" fallback="The Jammi Journal" />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Ancient Wisdom for <span className="text-forest relative">Modern Vitality<svg className="absolute w-full h-3 -bottom-1 left-0 text-saffron/40 opacity-70" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3" fill="transparent"/></svg></span>
+              <CMS section="hero" field="heroTitle" multiline fallback={<>Ancient Wisdom for <span className="text-forest relative">Modern Vitality<svg className="absolute w-full h-3 -bottom-1 left-0 text-saffron/40 opacity-70" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3" fill="transparent"/></svg></span></>} />
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-xl leading-relaxed">
-              Unlock the centuries-old secrets of Ayurveda. Curated wellness practices to balance your mind, body, and spirit in today's fast-paced world.
+              <CMS section="hero" field="heroDesc" multiline fallback="Unlock the centuries-old secrets of Ayurveda. Curated wellness practices to balance your mind, body, and spirit in today's fast-paced world." />
             </p>
           </div>
           
           <div className="md:w-1/2 relative">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-forest/20 to-transparent mix-blend-overlay z-10"></div>
-              <img 
-                src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-                alt="Ayurvedic Herbs" 
+              <CMSImage 
+                section="hero"
+                field="heroImage" 
+                fallback="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -72,8 +116,12 @@ export default function Journal() {
                 <span className="material-symbols-outlined">eco</span>
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">100% Natural</p>
-                <p className="text-xs text-slate-500">Holistic Healing</p>
+                <p className="text-sm font-bold text-slate-900">
+                  <CMS section="hero" field="floatingBadgeTitle" fallback="100% Natural" />
+                </p>
+                <p className="text-xs text-slate-500">
+                  <CMS section="hero" field="floatingBadgeDesc" fallback="Holistic Healing" />
+                </p>
               </div>
             </div>
           </div>
@@ -85,8 +133,12 @@ export default function Journal() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Latest from the Journal</h2>
-              <p className="text-slate-600 mt-2">Explore our most recent articles on health, herbs, and harmony.</p>
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+                <CMS section="grid" field="gridTitle" fallback="Latest from the Journal" />
+              </h2>
+              <p className="text-slate-600 mt-2">
+                <CMS section="grid" field="gridDesc" fallback="Explore our most recent articles on health, herbs, and harmony." />
+              </p>
             </div>
           </div>
 
@@ -122,7 +174,7 @@ export default function Journal() {
                     )}
                     {/* Category Pill (Mocked as Wellness since no category in schema) */}
                     <div className="absolute top-4 right-4 px-3 py-1 bg-white/90 backdrop-blur-sm shadow-sm rounded-full text-[10px] font-bold text-saffron uppercase tracking-widest">
-                      Wellness
+                      <CMS section="grid" field="categoryLabel" fallback="Wellness" />
                     </div>
                   </div>
                   
@@ -131,7 +183,9 @@ export default function Journal() {
                     <div className="flex items-center gap-2 text-xs text-slate-500 mb-3 font-medium">
                       <span>{new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                      <span>5 min read</span>
+                      <span>
+                        <CMS section="grid" field="readTime" fallback="5 min read" />
+                      </span>
                     </div>
                     
                     <h3 className="text-xl font-bold text-slate-900 mb-2 leading-snug group-hover:text-forest transition-colors line-clamp-2">
@@ -147,11 +201,13 @@ export default function Journal() {
                         <div className="w-8 h-8 rounded-full bg-forest/10 flex items-center justify-center text-forest font-bold text-xs">
                           J
                         </div>
-                        <span className="text-xs font-bold text-slate-700">Jammi Expert</span>
+                        <span className="text-xs font-bold text-slate-700">
+                          <CMS section="grid" field="authorLabel" fallback="Jammi Expert" />
+                        </span>
                       </div>
                       
                       <button className="flex items-center gap-1 text-sm font-bold text-forest group-hover:text-green-700 transition-colors">
-                        Read More
+                        <CMS section="grid" field="readMoreBtn" fallback="Read More" />
                         <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
                       </button>
                     </div>
@@ -168,8 +224,12 @@ export default function Journal() {
          {/* Background pattern */}
          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
          <div className="max-w-3xl mx-auto text-center relative z-10">
-           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Join Our Wellness Community</h2>
-           <p className="text-green-50 text-lg mb-8 max-w-xl mx-auto opacity-90">Subscribe to The Jammi Journal for weekly insights, healthy recipes, and exclusive offers straight to your inbox.</p>
+           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+             <CMS section="newsletter" field="newsletterTitle" fallback="Join Our Wellness Community" />
+           </h2>
+           <p className="text-green-50 text-lg mb-8 max-w-xl mx-auto opacity-90">
+             <CMS section="newsletter" field="newsletterDesc" multiline fallback="Subscribe to The Jammi Journal for weekly insights, healthy recipes, and exclusive offers straight to your inbox." />
+           </p>
            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); alert('Subscribed successfully!'); }}>
              <input 
                 type="email" 
@@ -178,7 +238,7 @@ export default function Journal() {
                 className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-saffron text-slate-900"
              />
              <button type="submit" className="bg-saffron text-white font-bold px-6 py-3 rounded-lg hover:bg-yellow-500 transition-colors shadow-lg">
-                Subscribe
+                <CMS section="newsletter" field="subscribeBtn" fallback="Subscribe" />
              </button>
            </form>
          </div>
