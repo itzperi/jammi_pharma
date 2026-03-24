@@ -6,7 +6,11 @@ import { imagesApi, cmsApi } from '../lib/adminApi';
 interface EditorImageProps {
   src: string;
   alt: string;
-  cmsKey: { page: string, section: string, content_key: string };
+  cmsKey?: { page: string, section: string, content_key: string };
+  bucket?: string;
+  folder?: string;
+  editorActive?: boolean;
+  onUpdate?: (url: string) => void | Promise<void>;
   width?: number;
   height?: number;
   className?: string;
@@ -14,20 +18,33 @@ interface EditorImageProps {
 }
 
 export default function EditorImage({
-  src, alt, cmsKey, width = 400, height = 400, className = '', style = {}
+  src, 
+  alt, 
+  cmsKey, 
+  bucket, 
+  folder, 
+  editorActive: editorActiveProp, 
+  onUpdate, 
+  width = 400, 
+  height = 400, 
+  className = '', 
+  style = {}
 }: EditorImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [replacing, setReplacing] = useState(false);
-  const [editorActive, setEditorActive] = useState(false);
+  const [editorState, setEditorState] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Use prop if provided, otherwise check localStorage
+  const effectiveEditorActive = editorActiveProp !== undefined ? editorActiveProp : editorState;
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (editorActiveProp === undefined && typeof window !== 'undefined') {
       const active = localStorage.getItem("jammi_cms_session") === 'true';
-      setEditorActive(active);
+      setEditorState(active);
     }
-  }, []);
+  }, [editorActiveProp]);
 
   useEffect(() => {
     setCurrentSrc(src);
@@ -44,16 +61,22 @@ export default function EditorImage({
     setReplacing(true);
     try {
       // Upload via server-side API
-      const newUrl = await imagesApi.upload(file, 'cms-images', cmsKey.page);
+      const targetBucket = bucket || 'cms-images';
+      const targetFolder = folder || cmsKey?.page || 'general';
+      const newUrl = await imagesApi.upload(file, targetBucket, targetFolder);
       
-      // Persist URL to cms_content table
-      await cmsApi.saveContent([{
-        page: cmsKey.page,
-        section: cmsKey.section,
-        content_key: cmsKey.content_key,
-        content_value: newUrl,
-        content_type: 'image_url'
-      }]);
+      if (onUpdate) {
+        await onUpdate(newUrl);
+      } else if (cmsKey) {
+        // Persist URL to cms_content table
+        await cmsApi.saveContent([{
+          page: cmsKey.page,
+          section: cmsKey.section,
+          content_key: cmsKey.content_key,
+          content_value: newUrl,
+          content_type: 'image_url'
+        }]);
+      }
 
       setCurrentSrc(newUrl);
     } catch (error: any) {
@@ -67,7 +90,7 @@ export default function EditorImage({
   }
 
   const handleClick = () => {
-    if (editorActive) {
+    if (effectiveEditorActive) {
       fileInputRef.current?.click();
     }
   };
@@ -75,10 +98,10 @@ export default function EditorImage({
   return (
     <div
       onClick={handleClick}
-      onMouseEnter={() => editorActive && setIsHovered(true)}
-      onMouseLeave={() => editorActive && setIsHovered(false)}
+      onMouseEnter={() => effectiveEditorActive && setIsHovered(true)}
+      onMouseLeave={() => effectiveEditorActive && setIsHovered(false)}
       style={{
-        cursor: editorActive ? 'pointer' : 'default',
+        cursor: effectiveEditorActive ? 'pointer' : 'default',
         position: 'relative',
         display: 'inline-block',
         ...style
@@ -93,7 +116,7 @@ export default function EditorImage({
         className="w-full h-full object-cover transition-transform group-hover:scale-105" 
       />
 
-      {editorActive && (
+      {effectiveEditorActive && (
         <>
           {/* Green Overlay */}
           <div className={`absolute inset-0 bg-green-600/60 flex flex-col items-center justify-center transition-opacity z-10 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
