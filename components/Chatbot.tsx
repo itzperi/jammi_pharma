@@ -105,7 +105,7 @@ export default function Chatbot() {
                 if (lowerText.includes('liver') || lowerText.includes('digestion') || lowerText.includes('stomach')) searchKeywords.push('liver', 'digestion', 'stomach', 'hepableen');
                 if (lowerText.includes('sugar') || lowerText.includes('diabet')) searchKeywords.push('sugar', 'metabolism');
 
-                let bestMatch = null;
+                let bestMatch: any = null;
                 let maxScore = 0;
 
                 for (const prod of storeProducts) {

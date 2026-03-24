@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 
 export function useAdminSave() {
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   const getToken = async () => {

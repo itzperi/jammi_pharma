@@ -83,7 +83,7 @@ export default function AdminCategories() {
         setActiveCategoryId(id);
       }
 
-      const promises = [];
+      const promises: Promise<any>[] = [];
       const originalCategoryName = editingCategoryId ? categories.find(c => c.id === editingCategoryId)?.name || '' : '';
       
       for (const pId of selectedProductIds) {

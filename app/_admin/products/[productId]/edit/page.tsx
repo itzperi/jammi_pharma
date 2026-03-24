@@ -4,7 +4,8 @@ import ProductForm from '../../../../../components/admin/ProductForm';
 import { useParams } from 'next/navigation';
 
 export default function EditProductPage() {
-    const { productId } = useParams();
+    const params = useParams();
+    const productId = params?.productId as string;
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 

@@ -31,6 +31,7 @@ interface ContentItem {
   content_key: string;
   content_value: string;
   content_type: string;
+  updated_at?: string;
 }
 
 export default function AdminCMS() {

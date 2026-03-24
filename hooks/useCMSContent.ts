@@ -1,10 +1,11 @@
+import { RealtimeChannel } from '@supabase/supabase-js'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
-export function useCMSContent(page) {
-  const [content, setContent] = useState({})
+export function useCMSContent(page: string) {
+  const [content, setContent] = useState<any>({})
   const [loading, setLoading] = useState(true)
-  const channelRef = useRef(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
 
   const fetchContent = useCallback(async () => {
     try {

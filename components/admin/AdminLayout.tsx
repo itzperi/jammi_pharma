@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="px-4 mb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-6">Management</div>
             <ul className="space-y-1 px-3">
               {ADMIN_NAV_ITEMS.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                const isActive = pathname ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;
                 return (
                   <li key={item.href}>
                     <Link
@@ -104,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Topbar */}
           <header className="h-16 fixed top-0 right-0 left-[240px] bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-40">
             <h2 className="text-lg font-bold text-white tracking-tight">
-              {ADMIN_NAV_ITEMS.find(i => pathname.startsWith(i.href))?.label || 'Dashboard'}
+              {ADMIN_NAV_ITEMS.find(i => !!pathname?.startsWith(i.href))?.label || 'Dashboard'}
             </h2>
             
             <div className="flex items-center gap-4">

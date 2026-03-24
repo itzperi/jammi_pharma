@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       : null;
 
     // Sales chart: last 12 months
-    const chartData = [];
+    const chartData: any[] = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const start = d.toISOString();
