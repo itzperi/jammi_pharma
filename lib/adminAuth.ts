@@ -5,7 +5,12 @@ import { supabaseAdmin as sharedAdmin } from './supabase'
 // Re-export the centralized admin client
 export const supabaseAdmin: SupabaseClient = sharedAdmin;
 
-export async function verifyAdmin(req: any, res?: any) {
+export interface AdminUser {
+  user: any;
+  adminRecord: any;
+}
+
+export async function verifyAdmin(req: any, res?: any): Promise<AdminUser | null | any> {
   try {
     // 1. Get token from headers
     let token = '';
@@ -51,17 +56,21 @@ export async function verifyAdmin(req: any, res?: any) {
 
 export function unauthorized(res?: any) {
   const message = { error: 'Unauthorized. Admin session required.' };
-  if (res && res.status) {
+  if (res && res.status && typeof res.status === 'function') {
     res.status(401).json(message);
     return null;
   }
   return NextResponse.json(message, { status: 401 });
 }
 
-export function serverError(res: any, error: any) {
-  console.error('[Admin API Error]', error);
-  const message = { error: error?.message || 'Internal server error' };
-  if (res && res.status) {
+export function serverError(resOrError: any, error?: any) {
+  const res = error ? resOrError : null;
+  const err = error || resOrError;
+  
+  console.error('[Admin API Error]', err);
+  const message = { error: err?.message || 'Internal server error' };
+  
+  if (res && res.status && typeof res.status === 'function') {
     res.status(500).json(message);
     return null;
   }
