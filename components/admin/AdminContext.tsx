@@ -15,14 +15,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    // Check for admin session and edit mode on mount
+    // Check for admin session and edit mode
     const checkState = async () => {
       const { data: { session } } = await import('../../lib/supabase').then(m => m.supabase.auth.getSession());
-      const hasLocalSession = sessionStorage.getItem("jammi_admin_session") === "true";
+      const hasLocalSession = sessionStorage.getItem("jammi_admin_session") === "true" || 
+                             localStorage.getItem("jammi_admin_session") === "true" ||
+                             localStorage.getItem("jammi_cms_session") === "true";
       
       if (session || hasLocalSession) {
         setIsAdmin(true);
-        const editMode = sessionStorage.getItem("jammi_edit_mode");
+        const editMode = sessionStorage.getItem("jammi_edit_mode") || localStorage.getItem("jammi_edit_mode");
         if (editMode === "true") {
           setIsEditMode(true);
         }
@@ -34,6 +36,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     checkState();
 
+    window.addEventListener('jammi_cms_unlocked', checkState);
+    window.addEventListener('storage', checkState);
+
     let authListener: any = null;
     import('../../lib/supabase').then(({ supabase }) => {
        const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -41,7 +46,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              setIsAdmin(true);
           } else {
              // Only log out if there's no UI local override for edge cases
-             if (sessionStorage.getItem("jammi_admin_session") !== "true") {
+             const hasLocal = sessionStorage.getItem("jammi_admin_session") === "true" || 
+                              localStorage.getItem("jammi_admin_session") === "true";
+             if (!hasLocal) {
                 setIsAdmin(false);
                 setIsEditMode(false);
              }
