@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { verifyAdmin } from '../../../../../lib/adminAuth'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -7,20 +8,11 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST(request) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return NextResponse.json({ error: 'No auth token' }, { status: 401 })
-
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-  if (authError || !user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-
-  const { data: adminUser } = await supabaseAdmin
-    .from('admin_users')
-    .select('id')
-    .eq('auth_user_id', user.id)
-    .eq('status', 'active')
-    .single()
-
-  if (!adminUser) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+  // Use the shared verifyAdmin which supports the bypass token
+  const admin = await verifyAdmin(request)
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const { updates } = await request.json()
 
@@ -41,3 +33,4 @@ export async function POST(request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }
+

@@ -25,7 +25,7 @@ export function useAdminSave() {
       const token = await getToken()
       const updatesArray = Array.isArray(updates) ? updates : [updates]
 
-      const res = await fetch('/api/admin/cms/save', {
+      const res = await fetch('/api/admin/cms/content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +55,8 @@ export function useAdminSave() {
 
     try {
       const token = await getToken()
-      const res = await fetch('/api/admin/products/save', {
+      const url = isNew ? '/api/admin/products' : `/api/admin/products/${productData.id}`
+      const res = await fetch(url, {
         method: isNew ? 'POST' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ export function useAdminSave() {
       formData.append('bucket', bucket)
       formData.append('folder', folder)
 
-      const res = await fetch('/api/admin/upload-image', {
+      const res = await fetch('/api/admin/images/upload', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -115,7 +116,8 @@ export function useAdminSave() {
 
     try {
       const token = await getToken()
-      const res = await fetch(`/api/admin/${table}/save`, {
+      const url = data[idField] ? `/api/admin/${table}/${data[idField]}` : `/api/admin/${table}`
+      const res = await fetch(url, {
         method: data[idField] ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
