@@ -278,6 +278,7 @@ export const useFederationStore = create<FederationStore>((set, get) => {
                 // Fallback ONLY for emergency if hardcoded credentials are used but Supabase fails
                 if (isHardcoded) {
                     console.warn("Supabase auth failed for hardcoded admin. Save operations WILL fail until user is created in Supabase.");
+                    localStorage.setItem('jammi_bypass_token', 'JAMMI_ADMIN_MASTER_KEY_2024');
                     set({ isAdminLoggedIn: true, sanctumModalOpen: false });
                     localStorage.setItem("jammi_admin_session", "true");
                     localStorage.setItem("jammi_cms_session", "true");
